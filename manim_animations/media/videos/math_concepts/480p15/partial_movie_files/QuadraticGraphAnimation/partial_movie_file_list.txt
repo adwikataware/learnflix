@@ -1,0 +1,11 @@
+# This file is used internally by FFMPEG.
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/1584795214_3269865371_223132457.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_1408957628_1867397835.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_2777286076_2138543145.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_261082682_1817389351.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_134230392_875044741.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_3188372196_2026473315.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_3244040264_4000111721.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_570874790_2508569227.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_3077383347_38321394.mp4'
+file 'file:D:/AIforBharat/PrimeLearn_Review/manim_animations/media/videos/math_concepts/480p15/partial_movie_files/QuadraticGraphAnimation/4072820271_1432596116_499303075.mp4'

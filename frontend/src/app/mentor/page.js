@@ -1,20 +1,130 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { getHint } from '@/lib/api';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { MessageSquare, Send, Sparkles, BrainCircuit } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { getHint, getLearnerId } from '@/lib/api';
+import AppLayout from '@/components/layout/AppLayout';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export default function MentorChat() {
+// ─── Hint Level Selector ───────────────────────────────────────────────────────
+
+function HintLevelSelector({ level, onChange }) {
+    const levels = [
+        { value: 1, label: 'L1', desc: 'Nudge' },
+        { value: 2, label: 'L2', desc: 'Clue' },
+        { value: 3, label: 'L3', desc: 'Explain' },
+        { value: 4, label: 'L4', desc: 'Answer' },
+    ];
+
+    return (
+        <div className="flex items-center gap-1 bg-[#050d17] rounded-full p-1 border border-border-dark">
+            {levels.map((l) => (
+                <button
+                    key={l.value}
+                    onClick={() => onChange(l.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                        level === l.value
+                            ? 'bg-[#00ace0] text-white shadow-[0_0_12px_rgba(0,172,224,0.3)]'
+                            : 'text-slate-500 hover:text-slate-300'
+                    }`}
+                    title={l.desc}
+                >
+                    {l.label}
+                </button>
+            ))}
+        </div>
+    );
+}
+
+// ─── Chat Message ──────────────────────────────────────────────────────────────
+
+function ChatMessage({ message, index }) {
+    const isUser = message.role === 'user';
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+        >
+            {/* AI avatar */}
+            {!isUser && (
+                <div className="size-8 rounded-full bg-[#00ace0]/15 border border-[#00ace0]/30 flex items-center justify-center shrink-0 mr-3 mt-1">
+                    <span className="material-symbols-outlined text-[#00ace0]" style={{ fontSize: 18 }}>psychology</span>
+                </div>
+            )}
+
+            <div className={`max-w-[80%] ${isUser ? 'order-1' : ''}`}>
+                <div
+                    className={`rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${
+                        isUser
+                            ? 'bg-[#00ace0]/10 text-white border border-[#00ace0]/20 rounded-br-md'
+                            : 'bg-card-dark border-l-2 border-[#00ace0] border-t border-r border-b border-t-border-dark border-r-border-dark border-b-border-dark text-slate-300 rounded-bl-md'
+                    }`}
+                >
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                </div>
+
+                {/* Hint level indicator */}
+                {message.level && (
+                    <div className="flex items-center gap-1 mt-1 ml-1">
+                        <span className="text-[10px] text-slate-600 uppercase tracking-wider">
+                            Hint Level {message.level}
+                        </span>
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+}
+
+// ─── Typing Indicator ──────────────────────────────────────────────────────────
+
+function TypingIndicator() {
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-3 mb-4"
+        >
+            <div className="size-8 rounded-full bg-[#00ace0]/15 border border-[#00ace0]/30 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#00ace0]" style={{ fontSize: 18 }}>psychology</span>
+            </div>
+            <div className="bg-card-dark border border-border-dark rounded-2xl rounded-bl-md px-5 py-3.5">
+                <div className="flex items-center gap-1.5">
+                    {[0, 1, 2].map((i) => (
+                        <motion.div
+                            key={i}
+                            className="size-2 rounded-full bg-[#00ace0]"
+                            animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
+                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                        />
+                    ))}
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
+// ─── Mentor Chat ───────────────────────────────────────────────────────────────
+
+function MentorChat() {
+    const searchParams = useSearchParams();
+    const conceptId = searchParams.get('concept_id') || 'general';
+
     const [messages, setMessages] = useState([
-        { role: 'assistant', content: 'Hello! I am your AI Socratic Mentor. How can I guide you today?' }
+        {
+            role: 'assistant',
+            content: `Hello! I am your Socratic Mentor. ${conceptId !== 'general' ? `I see you're exploring "${conceptId.replace(/_/g, ' ')}". ` : ''}I won't give you direct answers -- instead, I'll guide you with questions so you discover the answers yourself. What would you like to explore?`
+        }
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const [hintLevel, setHintLevel] = useState(1);
     const messagesEndRef = useRef(null);
+    const inputRef = useRef(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -24,6 +134,10 @@ export default function MentorChat() {
         scrollToBottom();
     }, [messages, loading]);
 
+    useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
+
     const handleSend = async () => {
         if (!input.trim() || loading) return;
 
@@ -32,19 +146,26 @@ export default function MentorChat() {
         setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
         setLoading(true);
 
-        const lId = localStorage.getItem('learner_id') || 'demo_user';
+        const learnerId = getLearnerId() || 'demo_user';
 
         const { data, error } = await getHint({
-            learner_id: lId,
-            concept_id: 'general', // Mock concept
+            learner_id: learnerId,
+            concept_id: conceptId,
             question: userMsg,
-            hint_level: hintLevel
+            hint_level: hintLevel,
         });
 
         if (error) {
-            setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${error}` }]);
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: `I encountered an issue: ${error}. Let's try again -- what would you like to explore?`
+            }]);
         } else {
-            setMessages(prev => [...prev, { role: 'assistant', content: data.hint, level: data.hint_level }]);
+            setMessages(prev => [...prev, {
+                role: 'assistant',
+                content: data.hint || data.message || 'Think about this step by step...',
+                level: data.hint_level,
+            }]);
             if (data.next_level) {
                 setHintLevel(data.next_level);
             }
@@ -52,76 +173,131 @@ export default function MentorChat() {
         setLoading(false);
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
+        }
+    };
+
     return (
-        <div className="h-screen flex flex-col bg-brand-secondary">
-            {/* Header */}
-            <header className="h-16 border-b border-surface-hover bg-surface/80 flex items-center px-8 z-10 shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-brand-primary/20 flex items-center justify-center">
-                        <BrainCircuit className="text-brand-primary w-5 h-5" />
-                    </div>
-                    <div>
-                        <h2 className="text-white font-serif font-bold leading-tight">AI Mentor</h2>
-                        <p className="text-xs text-brand-primary tracking-widest uppercase font-bold">Socratic Mode (L{hintLevel})</p>
-                    </div>
-                </div>
-                <div className="ml-auto flex items-center gap-4">
-                    <span className="text-xs text-text-secondary border border-surface-hover px-3 py-1 rounded-full">Concept: BST</span>
-                </div>
-            </header>
-
-            {/* Chat Area */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col gap-6 relative">
-                <div className="absolute inset-0 pointer-events-none opacity-50" style={{ backgroundImage: 'radial-gradient(rgba(201,209,217,0.05) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
-
-                <div className="max-w-3xl w-full mx-auto flex flex-col gap-6 z-10 my-auto pb-4">
-                    {messages.map((m, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                            className={`flex max-w-[85%] ${m.role === 'user' ? 'self-end bg-surface-hover border-brand-primary/20' : 'self-start bg-surface border-surface-hover'} border p-4 rounded-2xl shadow-lg relative group`}
-                        >
-                            {m.role === 'assistant' && (
-                                <div className="absolute -left-10 top-2 w-8 h-8 rounded-full bg-brand-secondary border border-surface-hover flex items-center justify-center">
-                                    <Sparkles className="w-4 h-4 text-brand-primary" />
-                                </div>
-                            )}
-                            <div className="text-sm md:text-base leading-relaxed text-text-primary whitespace-pre-wrap">
-                                {m.content}
+        <AppLayout>
+            <div className="flex flex-col h-[calc(100vh-57px)]">
+                {/* ── Chat Header ── */}
+                <div className="shrink-0 px-6 lg:px-8 py-4 border-b border-border-dark bg-[#0f171e]/80 backdrop-blur-sm">
+                    <div className="max-w-3xl mx-auto flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-xl bg-gradient-to-br from-[#00ace0]/20 to-[#f0c14b]/10 border border-[#00ace0]/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-[#00ace0]" style={{ fontSize: 22 }}>psychology</span>
                             </div>
-                            {m.level && (
-                                <div className="absolute -bottom-6 right-0 text-[10px] text-text-secondary uppercase tracking-widest">Hint Level {m.level} applied</div>
+                            <div>
+                                <h2 className="text-white font-bold text-base font-[Manrope]">Socratic Mentor</h2>
+                                <p className="text-xs text-[#00ace0] font-semibold uppercase tracking-wider">
+                                    {conceptId !== 'general' ? conceptId.replace(/_/g, ' ') : 'General Mode'}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                            {/* Hint Level Selector */}
+                            <HintLevelSelector level={hintLevel} onChange={setHintLevel} />
+
+                            {/* Concept badge */}
+                            {conceptId !== 'general' && (
+                                <span className="hidden md:flex items-center gap-1.5 text-xs text-slate-500 border border-border-dark px-3 py-1.5 rounded-full bg-[#050d17]">
+                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>topic</span>
+                                    {conceptId.replace(/_/g, ' ')}
+                                </span>
                             )}
-                        </motion.div>
-                    ))}
+                        </div>
+                    </div>
+                </div>
 
-                    {loading && (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="self-start max-w-[85%] bg-surface border border-surface-hover p-4 rounded-2xl flex items-center gap-3 ml-10">
-                            <div className="w-2 h-2 rounded-full bg-brand-primary animate-bounce"></div>
-                            <div className="w-2 h-2 rounded-full bg-brand-primary animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                            <div className="w-2 h-2 rounded-full bg-brand-primary animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-                        </motion.div>
-                    )}
-                    <div ref={messagesEndRef} />
+                {/* ── Messages Area ── */}
+                <div className="flex-1 overflow-y-auto hide-scrollbar">
+                    {/* Subtle grid pattern */}
+                    <div className="relative min-h-full">
+                        <div
+                            className="absolute inset-0 pointer-events-none opacity-30"
+                            style={{
+                                backgroundImage: 'radial-gradient(rgba(0,172,224,0.06) 1px, transparent 1px)',
+                                backgroundSize: '24px 24px',
+                            }}
+                        />
+
+                        <div className="max-w-3xl mx-auto px-6 lg:px-8 py-6 relative z-10">
+                            {messages.map((m, i) => (
+                                <ChatMessage key={i} message={m} index={i} />
+                            ))}
+
+                            <AnimatePresence>
+                                {loading && <TypingIndicator />}
+                            </AnimatePresence>
+
+                            <div ref={messagesEndRef} />
+                        </div>
+                    </div>
+                </div>
+
+                {/* ── Input Bar ── */}
+                <div className="shrink-0 px-6 lg:px-8 py-4 bg-[#050d17] border-t border-border-dark">
+                    <div className="max-w-3xl mx-auto">
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 relative">
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    placeholder={`Ask about ${conceptId !== 'general' ? conceptId.replace(/_/g, ' ') : 'anything'}...`}
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    disabled={loading}
+                                    className="w-full bg-[#1a242f] border border-border-dark rounded-full py-3.5 pl-5 pr-14 text-sm text-white placeholder-slate-500 focus:ring-1 focus:ring-[#00ace0] focus:border-[#00ace0] transition-all outline-none disabled:opacity-50"
+                                />
+                            </div>
+                            <button
+                                onClick={handleSend}
+                                disabled={!input.trim() || loading}
+                                className="size-12 rounded-full bg-[#00ace0] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(0,172,224,0.2)]"
+                            >
+                                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>send</span>
+                            </button>
+                        </div>
+
+                        {/* Quick actions */}
+                        <div className="flex items-center gap-2 mt-3">
+                            <span className="text-[10px] text-slate-600 uppercase tracking-wider">Quick:</span>
+                            {[
+                                'Explain this concept',
+                                'Give me an analogy',
+                                'What are the prerequisites?',
+                            ].map((q) => (
+                                <button
+                                    key={q}
+                                    onClick={() => { setInput(q); inputRef.current?.focus(); }}
+                                    className="text-xs text-slate-500 hover:text-[#00ace0] border border-border-dark hover:border-[#00ace0]/30 px-3 py-1 rounded-full transition-colors bg-[#0f171e]"
+                                >
+                                    {q}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             </div>
+        </AppLayout>
+    );
+}
 
-            {/* Input Area */}
-            <div className="p-4 md:p-6 bg-surface/50 border-t border-surface-hover shrink-0">
-                <div className="max-w-3xl mx-auto flex gap-4">
-                    <Input
-                        placeholder="Ask your question..."
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        className="bg-brand-secondary border-surface-hover rounded-full px-6"
-                    />
-                    <Button onClick={handleSend} disabled={!input.trim() || loading} className="w-14 h-14 rounded-full p-0 flex items-center justify-center shrink-0">
-                        <Send className="w-5 h-5 ml-1" />
-                    </Button>
-                </div>
+// ─── Export ────────────────────────────────────────────────────────────────────
+
+export default function MentorPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-screen bg-[#0f171e]">
+                <div className="size-10 border-2 border-[#00ace0] border-t-transparent rounded-full animate-spin" />
             </div>
-
-        </div>
+        }>
+            <MentorChat />
+        </Suspense>
     );
 }

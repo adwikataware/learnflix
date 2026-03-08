@@ -1,60 +1,109 @@
-"use client";
+'use client';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { getLearnerId, getLearnerName } from '@/lib/api';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Sparkles, Compass, User, LayoutDashboard, Flame } from 'lucide-react';
+const NAV_ITEMS = [
+    { icon: 'home', label: 'Home', path: '/home' },
+    { icon: 'dashboard', label: 'Dashboard', path: '/dashboard' },
+    { icon: 'psychology', label: 'AI Mentor', path: '/mentor' },
+    { icon: 'account_circle', label: 'Profile', path: '/profile' },
+];
 
-export function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
     const pathname = usePathname();
+    const router = useRouter();
+    const [streak, setStreak] = useState(0);
+    const [learnerName, setLearnerName] = useState('Learner');
 
-    const navLinks = [
-        { name: 'Constellation', href: '/home', icon: Compass },
-        { name: 'Episodes', href: '/episode', icon: Sparkles },
-        { name: 'Mentor', href: '/mentor', icon: User },
-        { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    ];
+    useEffect(() => {
+        setLearnerName(getLearnerName());
+        const s = typeof window !== 'undefined' ? parseInt(localStorage.getItem('streak') || '0') : 0;
+        setStreak(s);
+    }, []);
+
+    const navigate = (path) => {
+        router.push(path);
+        onClose?.();
+    };
 
     return (
-        <aside className="w-64 h-screen bg-surface border-r border-surface-hover fixed left-0 top-0 hidden md:flex flex-col py-8 px-6 z-50">
-            <div className="flex items-center gap-2 mb-10">
-                <Sparkles className="text-brand-primary w-6 h-6" />
-                <span className="text-white font-serif text-xl tracking-tight">PrimeLearn</span>
-            </div>
+        <>
+            {/* Mobile overlay */}
+            {isOpen && (
+                <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={onClose} />
+            )}
 
-            <div className="bg-brand-secondary/50 border border-surface-hover rounded-xl p-4 mb-8 flex items-center gap-4">
-                <Flame className="text-orange-500 w-8 h-8" />
-                <div>
-                    <p className="text-white font-bold text-lg leading-tight">7 Days</p>
-                    <p className="text-text-secondary text-xs uppercase tracking-widest">Active Streak</p>
+            <aside className={`
+                fixed left-0 top-0 h-screen w-64 bg-nav-dark border-r border-border-dark z-50
+                flex flex-col transition-transform duration-300
+                lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}>
+                {/* Logo */}
+                <div className="p-6 flex items-center gap-3">
+                    <div className="size-10 bg-primary rounded-lg flex items-center justify-center text-bg-dark">
+                        <span className="material-symbols-outlined font-bold" style={{ fontSize: 24 }}>play_arrow</span>
+                    </div>
+                    <h1 className="text-xl font-extrabold tracking-tight">
+                        <span className="text-white">Prime</span>
+                        <span className="text-primary">Learn</span>
+                    </h1>
                 </div>
-            </div>
 
-            <nav className="flex flex-col gap-2">
-                {navLinks.map((link) => {
-                    const isActive = pathname.startsWith(link.href);
-                    const Icon = link.icon;
-                    return (
-                        <Link
-                            key={link.name}
-                            href={link.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive ? 'bg-brand-primary/10 text-brand-primary' : 'text-text-secondary hover:bg-surface-hover hover:text-white'}`}
+                {/* Navigation */}
+                <nav className="flex-1 px-4 py-2 space-y-1">
+                    <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-widest text-text-muted">Navigation</p>
+                    {NAV_ITEMS.map((item) => {
+                        const isActive = pathname === item.path || (item.path === '/home' && pathname === '/');
+                        return (
+                            <button
+                                key={item.path}
+                                onClick={() => navigate(item.path)}
+                                className={`
+                                    w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group text-left
+                                    ${isActive
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
+                                    }
+                                `}
+                            >
+                                <span className="material-symbols-outlined transition-transform group-hover:scale-110" style={{ fontSize: 22 }}>
+                                    {item.icon}
+                                </span>
+                                <span className="text-sm font-semibold">{item.label}</span>
+                            </button>
+                        );
+                    })}
+                </nav>
+
+                {/* Daily Streak */}
+                <div className="px-6 pb-4">
+                    <div className="flex flex-col items-center justify-center rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 p-4 border border-slate-700/50">
+                        <span
+                            className="material-symbols-outlined text-amber-500 mb-1 animate-pulse"
+                            style={{ fontVariationSettings: "'FILL' 1", fontSize: 40 }}
                         >
-                            <Icon className="w-5 h-5" />
-                            <span className="font-medium text-sm">{link.name}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            <div className="mt-auto">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-primary to-orange-500 shadow-[0_0_15px_rgba(255,210,30,0.4)]"></div>
-                    <div>
-                        <p className="text-white text-sm font-semibold">Alex Rivera</p>
-                        <p className="text-text-secondary text-xs">Level 12 Architect</p>
+                            local_fire_department
+                        </span>
+                        <p className="text-2xl font-extrabold text-white">{streak} Days</p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">Keep it up, {learnerName.split(' ')[0]}!</p>
                     </div>
                 </div>
-            </div>
-        </aside>
+
+                {/* Help Card */}
+                <div className="px-6 pb-6">
+                    <div className="bg-primary/5 rounded-2xl p-4 border border-primary/20">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">NEED HELP?</p>
+                        <p className="text-sm font-bold text-slate-100 mb-3 leading-snug">Ask your AI Mentor for guidance on any concept.</p>
+                        <button onClick={() => navigate('/mentor')} className="w-full py-2 bg-accent text-bg-dark font-bold rounded-lg text-xs transition-all hover:scale-[1.02] hover:brightness-110 active:scale-95">
+                            ASK AI MENTOR
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </>
     );
 }
+
+// Named export for backwards compatibility
+export { Sidebar };

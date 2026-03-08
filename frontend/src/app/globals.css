@@ -1,42 +1,203 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #FFD21E;
-  --color-brand-secondary: #0D1117;
-  --color-brand-accent: #238636;
-  --color-brand-danger: #F85149;
-  --color-surface: #161B22;
-  --color-surface-hover: #21262D;
-  --color-text-primary: #C9D1D9;
-  --color-text-secondary: #8B949E;
-  
-  --font-primary: "Inter", sans-serif;
-  --font-serif: "Playfair Display", serif;
+  /* ─── Prime Video Dark Theme ─── */
+  --color-primary: #00ace0;
+  --color-primary-light: #33c4ec;
+  --color-primary-dark: #0089b3;
+  --color-accent: #f0c14b;
+  --color-accent-hover: #e6b840;
+  --color-accent-orange: #ff9900;
+
+  --color-bg-dark: #0f171e;
+  --color-bg-deeper: #050d17;
+  --color-surface-dark: #1a242f;
+  --color-surface-hover: #1a2b3c;
+  --color-card-dark: #1a242f;
+  --color-nav-dark: #0f1e23;
+  --color-border-dark: #2a3642;
+  --color-border-subtle: #1a2b33;
+
+  --color-text-white: #f1f5f9;
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+
+  --color-success: #00d26a;
+  --color-warning: #fbbf24;
+  --color-danger: #f85149;
+
+  /* ─── Legacy aliases for existing components ─── */
+  --color-brand-primary: #00ace0;
+  --color-brand-secondary: #0f171e;
+  --color-brand-accent: #00d26a;
+  --color-brand-danger: #f85149;
+  --color-surface: #1a242f;
+
+  --font-display: "Manrope", sans-serif;
 }
 
 @layer base {
-  body {
-    background-color: var(--color-brand-secondary);
-    color: var(--color-text-primary);
-    font-family: var(--font-primary);
+  html {
+    scroll-behavior: smooth;
   }
-  
+  body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-primary);
+    font-family: "Manrope", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-serif);
+    font-family: "Manrope", sans-serif;
+    font-weight: 700;
   }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg-dark); }
+::-webkit-scrollbar-thumb { background: var(--color-border-dark); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* ─── Hide Scrollbar Utility ─── */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Prime Glow Effects ─── */
+.prime-glow { box-shadow: 0 0 20px rgba(0, 172, 224, 0.15); }
+.prime-glow-hover:hover { box-shadow: 0 0 20px rgba(0, 172, 224, 0.4); border-color: rgba(0, 172, 224, 0.5); }
+.prime-selected { border-color: #00ace0 !important; box-shadow: 0 0 25px rgba(0, 172, 224, 0.5); background-color: rgba(0, 172, 224, 0.08) !important; }
+.gold-glow { box-shadow: 0 4px 20px rgba(240, 193, 75, 0.3); }
+.success-glow { box-shadow: 0 0 15px rgba(0, 210, 106, 0.4); }
+
+/* ─── Glass Panel ─── */
+.glass-panel { background: rgba(15, 23, 30, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+/* ─── Animations ─── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-::-webkit-scrollbar-track {
-  background: var(--color-brand-secondary); 
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
-::-webkit-scrollbar-thumb {
-  background: var(--color-surface-hover); 
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes reveal {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes hero-zoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(0, 172, 224, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(0, 172, 224, 0.6); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-fade-up { animation: fade-up 0.6s ease-out forwards; }
+.animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+.animate-scale-in { animation: scale-in 0.5s ease-out forwards; }
+.animate-reveal { animation: reveal 0.8s ease-out forwards; }
+.animate-slide-right { animation: slide-in-right 0.5s ease-out forwards; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-hero-zoom { animation: hero-zoom 20s ease-in-out infinite alternate; }
+
+@keyframes float-learn {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  25%  { transform: translate(15px, -20px) rotate(3deg); }
+  50%  { transform: translate(-10px, -35px) rotate(-2deg); }
+  75%  { transform: translate(20px, -15px) rotate(4deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.animate-float-learn { animation: float-learn 20s ease-in-out infinite; }
+
+/* Staggered animations */
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+
+/* ─── Constellation Nodes ─── */
+.node-glow-green { filter: drop-shadow(0 0 8px rgba(0, 210, 106, 0.6)); }
+.node-glow-blue { filter: drop-shadow(0 0 8px rgba(0, 172, 224, 0.6)); }
+.node-glow-gold { filter: drop-shadow(0 0 8px rgba(240, 193, 75, 0.6)); }
+
+/* ─── Prose Override for Episode Content ─── */
+.prose-prime {
+  color: var(--color-text-secondary);
+}
+.prose-prime h1, .prose-prime h2, .prose-prime h3, .prose-prime h4 {
+  color: var(--color-text-white);
+  font-weight: 700;
+}
+.prose-prime strong { color: var(--color-text-white); }
+.prose-prime code {
+  background: rgba(0, 172, 224, 0.1);
+  color: #00ace0;
+  padding: 2px 6px;
   border-radius: 4px;
+  font-size: 0.875em;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary); 
+.prose-prime pre {
+  background: var(--color-bg-deeper);
+  border: 1px solid var(--color-border-dark);
+  border-radius: 12px;
+  padding: 1rem;
+}
+.prose-prime a { color: #00ace0; text-decoration: underline; }
+.prose-prime blockquote {
+  border-left: 3px solid #00ace0;
+  padding-left: 1rem;
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+.prose-prime ul { list-style-type: disc; padding-left: 1.5rem; }
+.prose-prime ol { list-style-type: decimal; padding-left: 1.5rem; }
+.prose-prime li { margin-bottom: 0.25rem; }
+
+/* ─── Landing Page: Hero Gradient Overlay ─── */
+.hero-gradient {
+  background: linear-gradient(70deg, rgba(15,23,30,1) 30%, rgba(15,23,30,0.4) 60%, rgba(15,23,30,0) 100%);
+}
+
+/* ─── Landing Page: Card Shadows & Glow ─── */
+.card-shadow:hover {
+  box-shadow: 0 0 20px rgba(0,172,224,0.3);
+}
+.group:hover .card-glow-effect {
+  box-shadow: 0 0 25px 5px rgba(0,172,224,0.4);
+}
+
+/* ─── Landing Page: Scroll Reveal ─── */
+.reveal-on-scroll {
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+.reveal-on-scroll.is-visible {
+  animation: reveal 0.8s forwards ease-out;
+}
+
+/* ─── Landing Page: Fade Up Init ─── */
+.fade-up-init {
+  opacity: 0;
+}
+.fade-up-init.is-visible {
+  animation: fade-up 1s forwards cubic-bezier(0.2,0.8,0.2,1);
 }

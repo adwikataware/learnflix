@@ -1,14 +1,17 @@
 import { forwardRef } from 'react';
 
-export const Input = forwardRef(({ className = '', error, ...props }, ref) => {
+export const Input = forwardRef(({ className = '', error, label, ...props }, ref) => {
     return (
-        <div className="w-full relative">
+        <div className="w-full">
+            {label && (
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">{label}</label>
+            )}
             <input
                 ref={ref}
-                className={`w-full bg-surface border border-surface-hover rounded-xl px-4 py-3 text-white placeholder:text-text-secondary focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary transition-all ${error ? 'border-brand-danger focus:border-brand-danger focus:ring-brand-danger' : ''} ${className}`}
+                className={`w-full bg-surface-dark border border-border-dark rounded-lg px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-sm ${error ? 'border-danger focus:border-danger focus:ring-danger' : ''} ${className}`}
                 {...props}
             />
-            {error && <p className="text-brand-danger text-xs mt-1 absolute -bottom-5 left-1">{error}</p>}
+            {error && <p className="text-danger text-xs mt-1.5 font-medium">{error}</p>}
         </div>
     );
 });
