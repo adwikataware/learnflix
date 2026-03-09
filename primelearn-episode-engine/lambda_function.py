@@ -392,7 +392,7 @@ ABSOLUTE REQUIREMENTS (VIOLATION = BROKEN CODE):
 3. Import ONLY: `from manim import *` and optionally `import numpy as np` or `import random`
 4. Do NOT import os, sys, subprocess, or any system library.
 5. Scene class MUST inherit from Scene (not ThreeDScene, MovingCameraScene, etc.)
-6. Keep total animation 15-25 seconds. Use run_time=0.3-0.8 for most animations.
+6. Keep total animation 30-45 seconds. Use run_time=0.5-1.2 for most animations. Add self.wait(0.5) between major steps. Include at least 4-5 distinct animated sections.
 7. Define exactly ONE class inheriting from Scene.
 8. For Axes: ALWAYS use include_numbers=False. Add manual Text labels with .next_to().
 9. NEVER use axes.get_axis_labels() — use manual Text labels instead.
@@ -520,6 +520,30 @@ The code must start with `from manim import *` and define a class inheriting fro
 
         if 'class ' not in code_text or 'Scene' not in code_text:
             return None, "Generated code does not contain a valid Scene class"
+
+        # Post-process: boost run_time values to make video longer
+        def boost_runtime(match):
+            try:
+                val = float(match.group(1))
+                if val < 0.5:
+                    val = val * 2.5
+                elif val < 0.8:
+                    val = val * 1.8
+                return f'run_time={val:.1f}'
+            except Exception:
+                return match.group(0)
+        code_text = _re.sub(r'run_time\s*=\s*([0-9.]+)', boost_runtime, code_text)
+
+        # Replace all self.wait(X) where X < 1 with self.wait(1.5)
+        def boost_wait(match):
+            try:
+                val = float(match.group(1))
+                if val < 1.0:
+                    return 'self.wait(1.5)'
+                return match.group(0)
+            except Exception:
+                return match.group(0)
+        code_text = _re.sub(r'self\.wait\(([0-9.]+)\)', boost_wait, code_text)
 
         return code_text, None
 
@@ -994,7 +1018,7 @@ def handle_get_episode(event):
             "\n\nFor Quick Byte, keep it very concise (3-5 min read). Include:\n"
             "- 'summary': one-line key takeaway\n"
             "- 'image_prompt': description of a single key visual\n"
-            "- Exactly 2 activities (mcq type, make them tricky)"
+            "- Exactly 6 activities (mix of mcq, fill_blank, true_false — test logic, not just recall)"
         )
 
     prompt = (
@@ -1015,7 +1039,11 @@ def handle_get_episode(event):
         "and <p> for explanations. Include at least 5-8 subtopics with proper depth. "
         "Think of it as a complete reference guide a student would use to study. "
         "Each subtopic should have: definition, explanation in simple words, a practical example, and a key takeaway.\n"
-        "- 'activities': array of 2-3 objects with 'type' (mcq/coding/fill_blank), 'question', 'options' (array of 4 strings for mcq), 'correct' (index or string). Make questions actually challenging.\n"
+        "- 'activities': array of EXACTLY 6 assessment questions. Mix these types:\n"
+        "   * 2-3 MCQ ('type':'mcq') — tricky conceptual/logic questions, NOT trivial definitions. Include 'question', 'options' (4 strings), 'correct' (0-based index), 'explanation' (why the answer is correct).\n"
+        "   * 1-2 fill_blank ('type':'fill_blank') — test key terms/syntax. Include 'question' (with ______ blank), 'correct' (the answer string), 'explanation'.\n"
+        "   * 1-2 true_false ('type':'true_false') — tricky statements that test deep understanding. Include 'question' (a statement), 'options':['True','False'], 'correct' (0 or 1), 'explanation'.\n"
+        "   Make questions test LOGIC and UNDERSTANDING, not just recall. Include tricky edge cases and common misconceptions.\n"
         "Do not include any explanation outside the JSON."
     )
 
@@ -1495,7 +1523,9 @@ def handle_generate_video(event):
     body = get_body(event)
     video_type = body.get('type', 'nova_reel')
 
-    if video_type == 'manim':
+    if video_type == 'presentation':
+        return handle_generate_presentation(event)
+    elif video_type == 'manim':
         return handle_generate_manim_video(body)
     else:
         return handle_generate_nova_reel_video(event, body)
@@ -2259,65 +2289,65 @@ def handle_generate_visualizations(event):
     except Exception:
         pass
 
-    system_prompt = """You are an expert data visualization designer. Generate D3.js visualization configs as structured JSON.
-You MUST return ONLY a valid JSON object with key "visualizations" containing an array of 3-5 visualization objects.
-Each visualization object must have: type, title, subtitle, description, data.
+    system_prompt = """You are an expert educational visualization designer creating rich, data-dense D3.js charts.
+Return ONLY valid JSON: {"visualizations": [...]}
 
-Supported types and their data schemas:
+Each: {type, title, subtitle, description, data}
 
-1. "force_graph" — for relationships, dependencies, concept maps
-   data: { nodes: [{id, label, size?, color?, description?}], links: [{source, target, label?, weight?}] }
+TYPES:
 
-2. "tree" — for hierarchies, class inheritance, decision trees
-   data: { root: { name, children: [{ name, children?: [], value? }] } }
+1. "bar_chart" — comparisons. MUST have 5-8 bars with meaningful numeric values.
+   data: {items: [{label, value, color?}]}
+   Example for "Sorting Algorithms": items with labels "Bubble O(n²)", "Merge O(n log n)", "Quick O(n log n)", "Insert O(n²)", "Heap O(n log n)" with values 1000, 50, 45, 800, 55 representing operations on 100 elements.
+   OR grouped: {items: [{label, values: [num, num]}], legend: ["Best","Worst"]}
 
-3. "bar_chart" — for comparisons, complexity, performance metrics
-   data: { title?, items: [{label, value, color?}], legend?: [] }
-   OR grouped: { items: [{label, values: [num, num]}], legend: ["A","B"] }
+2. "heatmap" — compare multiple things across multiple dimensions. MUST have 4+ rows AND 4+ columns.
+   data: {title?, rows: [...], columns: [...], values: [[...]]}
+   Example for "Data Structures": rows=["Array","LinkedList","HashMap","Tree","Stack"], columns=["Access","Insert","Delete","Search"], values with O(1)=1, O(log n)=2, O(n)=3 mapped to numbers.
 
-4. "flow_diagram" — for algorithms, processes, data pipelines
-   data: { direction: "vertical"|"horizontal", steps: [{label, description?, type?: "decision"}] }
+3. "force_graph" — relationships. MUST have 8-15 nodes and 10+ links with labels.
+   data: {nodes: [{id, label, size?}], links: [{source, target, label?}]}
+   Nodes should have varying sizes (15-30) to show importance. Links must have descriptive labels.
 
-5. "bubble_chart" — for relative sizes, importance, categories
-   data: { title?, items: [{label, value, color?}] }
+4. "tree" — hierarchies. MUST have 3+ levels deep with 10+ total nodes.
+   data: {root: {name, children: [{name, children: [{name, value?}]}]}}
 
-6. "timeline" — for history, sequence of events, evolution
-   data: { events: [{label, date?, year?, color?}] }
+5. "flow_diagram" — processes. MUST have 5-8 steps with descriptions. Use "vertical" direction.
+   data: {direction: "vertical", steps: [{label, description, type?: "decision"}]}
+   Include at least 1 decision node.
 
-7. "radial" — for distributions, categories, proportions
-   data: { title?, items: [{label, value, color?}] }
+6. "scatter_plot" — correlations. MUST have 10+ data points with labels.
+   data: {title?, x_label, y_label, points: [{x, y, label?, size?}]}
 
-8. "animated_steps" — for step-by-step algorithm execution
-   data: { steps: [{ label, description, array?: [nums], highlights?: [indices], comparing?: [indices], swapping?: [indices], sorted?: [indices], pointers?: {name: index} }] }
+7. "bubble_chart" — relative sizes. MUST have 6-10 bubbles with varied values.
+   data: {title?, items: [{label, value}]}
 
-9. "scatter_plot" — for correlations, distributions
-   data: { title?, x_label?, y_label?, points: [{x, y, label?, size?, color?}] }
+8. "radial" — proportions. MUST have 5-8 segments with meaningful percentages.
+   data: {title?, items: [{label, value}]}
 
-10. "heatmap" — for matrices, correlations, frequency tables
-    data: { title?, rows: ["A","B"], columns: ["X","Y"], values: [[1,2],[3,4]] }
+MANDATORY RULES:
+- Generate EXACTLY 3 visualizations
+- EVERY visualization must be DATA-RICH — minimum items specified above per type
+- Use REAL, ACCURATE technical data from the topic (real complexity values, real comparisons, real metrics)
+- bar_chart: values must be meaningful numbers (not 1 vs 3), use realistic scales
+- force_graph: nodes need varied sizes, links need labels explaining the relationship
+- heatmap: fill every cell with a meaningful value
+- NO visualizations with fewer than 5 data points
+- NO generic labels like "Element 1", "Book A", "Efficient Access" — use REAL technical terms
+- Each visualization must teach a DIFFERENT aspect of the topic
+- Return ONLY valid JSON"""
 
-RULES:
-- Generate 3-5 diverse visualizations that DIRECTLY explain the given concept
-- Every visualization must be specifically about the topic, NOT generic CS diagrams
-- Use real data and examples from the actual topic (e.g., for "HTML Basics" show HTML tags, not generic "API/DB/CSS" nodes)
-- Node labels and chart items must use terms from the specific topic being taught
-- For CS/DSA topics, include an "animated_steps" showing the algorithm executing with real data
-- For CS topics, include a "bar_chart" comparing relevant metrics (time complexity, performance, etc.)
-- For any topic with relationships between its own concepts, include a "force_graph"
-- For any topic with hierarchy within itself, include a "tree"
-- For any process/workflow within the topic, include a "flow_diagram"
-- Keep node labels short (< 20 chars), descriptions clear
-- Use 5-12 nodes for force graphs, 4-8 items for bar charts
-- DO NOT generate generic placeholder visualizations — every chart must teach something specific about the topic
-- Return ONLY valid JSON, no markdown fences, no explanation"""
+    prompt = f"""Topic: "{concept_name}"
 
-    prompt = f"""Generate interactive D3.js visualizations specifically about: "{concept_name}"
-{f'Episode content summary: {content_summary[:500]}' if content_summary else ''}
-{f'Concept ID: {concept_id}' if concept_id else ''}
+Episode content:
+{content_summary[:1500] if content_summary else 'No content provided'}
 
-CRITICAL: Every visualization must be directly about "{concept_name}" using terms, concepts, and examples from this specific topic.
-Do NOT use generic placeholder nodes like "API", "DB", "CSS" unless the topic is actually about those things.
-Return 3-5 diverse visualizations that help a student understand the key aspects of "{concept_name}"."""
+Generate 3 DATA-RICH visualizations for "{concept_name}". Requirements:
+1. First viz: A "heatmap" comparing this topic's data structure/algorithm against 3-4 related alternatives across 4-5 operations/features. Use numeric scale 1-5 (1=best, 5=worst). Rows = data structures/algorithms, Columns = operations/features. This is ALWAYS more useful than a bar chart.
+2. Second viz: A "tree" or "flow_diagram" showing internal structure or process flow — must have 10+ nodes across 3+ levels. For algorithms show the step-by-step process. For data structures show the internal organization.
+3. Third viz: A "force_graph" showing how this topic relates to other concepts in the domain — must have 8+ nodes with varied sizes and labeled links explaining each relationship.
+
+Use SPECIFIC technical terms from the episode content. NO generic placeholders."""
 
     try:
         result_text, _model = call_llm(prompt, system_prompt=system_prompt, max_tokens=4000)
@@ -2325,17 +2355,36 @@ Return 3-5 diverse visualizations that help a student understand the key aspects
             parsed = safe_parse_json_object(result_text)
             if parsed and 'visualizations' in parsed:
                 viz_list = parsed['visualizations']
-                # Validate each visualization has required fields
+                # Validate each visualization — reject low-quality ones
                 valid_viz = []
                 for v in viz_list:
-                    if v.get('type') and v.get('data'):
-                        valid_viz.append({
-                            'type': v['type'],
-                            'title': v.get('title', ''),
-                            'subtitle': v.get('subtitle', ''),
-                            'description': v.get('description', ''),
-                            'data': v['data'],
-                        })
+                    if not v.get('type') or not v.get('data'):
+                        continue
+                    d = v['data']
+                    vtype = v['type']
+                    # Reject bar charts where all values are the same
+                    if vtype == 'bar_chart':
+                        items = d.get('items') or d.get('bars') or []
+                        vals = [it.get('value', 0) for it in items if isinstance(it, dict)]
+                        if len(set(vals)) <= 1:
+                            continue
+                    # Reject force graphs with fewer than 4 nodes
+                    if vtype == 'force_graph':
+                        nodes = d.get('nodes') or []
+                        if len(nodes) < 4:
+                            continue
+                    # Reject heatmaps with fewer than 3 rows
+                    if vtype == 'heatmap':
+                        rows = d.get('rows') or []
+                        if len(rows) < 3:
+                            continue
+                    valid_viz.append({
+                        'type': vtype,
+                        'title': v.get('title', ''),
+                        'subtitle': v.get('subtitle', ''),
+                        'description': v.get('description', ''),
+                        'data': d,
+                    })
                 if valid_viz:
                     response_data = {
                         "concept_name": concept_name,
@@ -2553,6 +2602,218 @@ Now generate detailed study notes from the above extracted text. Cover all secti
         return respond(500, {"error": f"Failed to generate notes: {str(e)}"})
 
 
+def handle_generate_presentation(event):
+    """POST /presentation/generate — Generate slide deck JSON + per-slide Polly audio."""
+    body = get_body(event)
+    concept_id = body.get('concept_id', '')
+    concept_name = body.get('concept_name', 'Topic')
+    episode_content = body.get('episode_content', '')
+
+    if not episode_content:
+        return respond(400, {"error": "episode_content is required"})
+
+    # ── Check cache ──
+    cache_hash = hashlib.md5(f"{concept_id}:{concept_name}:{episode_content[:500]}".encode()).hexdigest()
+    cache_key = f"presentations/{cache_hash}.json"
+    try:
+        cached = s3.get_object(Bucket=S3_CONTENT_BUCKET, Key=cache_key)
+        cached_data = json.loads(cached['Body'].read().decode())
+        # Re-sign all audio URLs (presigned URLs expire)
+        for slide in cached_data.get('slides', []):
+            if slide.get('audio_key'):
+                slide['audio_url'] = s3.generate_presigned_url(
+                    'get_object',
+                    Params={'Bucket': S3_CONTENT_BUCKET, 'Key': slide['audio_key']},
+                    ExpiresIn=3600
+                )
+        return respond(200, {**cached_data, "cached": True})
+    except Exception:
+        pass
+
+    # ── Clean episode content for context ──
+    clean_content = re.sub(r'<[^>]+>', ' ', episode_content)
+    clean_content = re.sub(r'\s+', ' ', clean_content).strip()[:3000]
+
+    # ── Generate slides via LLM ──
+    slide_prompt = f"""You are creating an educational presentation about "{concept_name}" for a learning platform called PrimeLearn.
+
+Generate a JSON array of 8-12 slides that explain this topic clearly and visually.
+
+CONTENT TO TEACH:
+{clean_content}
+
+EACH SLIDE must be a JSON object with these fields:
+- "type": one of "title", "bullets", "diagram", "code", "comparison", "summary", "keypoint"
+- "title": short slide title (max 8 words)
+- "subtitle": optional subtitle or context line
+- "narration": what the narrator should say for this slide (2-4 sentences, conversational and clear, like a friendly teacher explaining). This is the MOST important field — make it detailed and educational.
+- "content": depends on type:
+  - For "title": {{"headline": "main text", "tagline": "subtitle text"}}
+  - For "bullets": {{"points": ["point 1", "point 2", ...] }} (max 5 points)
+  - For "diagram": {{"nodes": [{{"label": "text", "type": "primary|secondary|accent"}}, ...], "connections": [{{"from": 0, "to": 1, "label": "optional"}}], "layout": "flow|tree|cycle"}}
+  - For "code": {{"language": "python", "code": "actual code here", "highlight_lines": [1, 3]}}
+  - For "comparison": {{"left": {{"title": "A", "points": [...]}}, "right": {{"title": "B", "points": [...]}}}}
+  - For "summary": {{"points": ["takeaway 1", "takeaway 2", ...]}}
+  - For "keypoint": {{"icon": "lightbulb|warning|star|check", "text": "the key insight", "detail": "explanation"}}
+- "visual_emphasis": "enter_left" | "enter_right" | "enter_bottom" | "fade" | "zoom" | "typewriter" (animation style)
+
+RULES:
+1. Start with a "title" slide, end with a "summary" slide.
+2. Use a variety of slide types — don't just use bullets.
+3. Include at least one "diagram" and one "keypoint" slide.
+4. Narration should be natural, like a teacher speaking. Not robotic.
+5. Each narration should be 15-30 words. The total presentation should be about 2-3 minutes of narration.
+6. Make content progressively build understanding — start simple, build complexity.
+7. If there's code in the topic, include a "code" slide.
+
+Return ONLY a valid JSON array. No markdown, no explanation. Just the JSON array of slides."""
+
+    try:
+        llm_response, _ = call_llm(slide_prompt, max_tokens=4000)
+    except Exception as e:
+        return respond(500, {"error": f"LLM slide generation failed: {str(e)}"})
+
+    # ── Parse slides JSON ──
+    slides = None
+    try:
+        # Try direct parse first
+        slides = json.loads(llm_response)
+    except json.JSONDecodeError:
+        # Try extracting JSON array from response
+        match = re.search(r'\[[\s\S]*\]', llm_response)
+        if match:
+            try:
+                slides = json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+
+    if not slides or not isinstance(slides, list):
+        return respond(500, {"error": "Failed to parse slide JSON from LLM", "raw": llm_response[:500]})
+
+    # ── Generate Polly audio for each slide's narration ──
+    for i, slide in enumerate(slides):
+        narration = slide.get('narration', '')
+        if not narration:
+            slide['audio_url'] = None
+            slide['audio_key'] = None
+            slide['duration'] = 3
+            continue
+
+        # Truncate narration for Polly
+        narration_text = narration[:2800]
+        audio_key = f"presentation-audio/{cache_hash}/slide_{i}.mp3"
+
+        try:
+            polly_response = polly.synthesize_speech(
+                Text=narration_text,
+                OutputFormat='mp3',
+                VoiceId='Kajal',
+                Engine='neural'
+            )
+            audio_stream = polly_response['AudioStream'].read()
+            s3.put_object(
+                Bucket=S3_CONTENT_BUCKET,
+                Key=audio_key,
+                Body=audio_stream,
+                ContentType='audio/mpeg'
+            )
+            slide['audio_url'] = s3.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': S3_CONTENT_BUCKET, 'Key': audio_key},
+                ExpiresIn=3600
+            )
+            slide['audio_key'] = audio_key
+            # Estimate duration from narration length (approx 150 words/min = 2.5 words/sec)
+            word_count = len(narration.split())
+            slide['duration'] = max(4, round(word_count / 2.5, 1))
+        except Exception as e:
+            print(f"Polly error for slide {i}: {e}")
+            slide['audio_url'] = None
+            slide['audio_key'] = None
+            word_count = len(narration.split())
+            slide['duration'] = max(4, round(word_count / 2.5, 1))
+
+    # ── Cache the result ──
+    result = {
+        "slides": slides,
+        "concept_name": concept_name,
+        "concept_id": concept_id,
+        "total_slides": len(slides),
+        "estimated_duration": sum(s.get('duration', 5) for s in slides),
+    }
+    try:
+        s3.put_object(
+            Bucket=S3_CONTENT_BUCKET,
+            Key=cache_key,
+            Body=json.dumps(result),
+            ContentType='application/json'
+        )
+    except Exception:
+        pass
+
+    return respond(200, {**result, "cached": False})
+
+
+def handle_generate_audio(event):
+    """POST /audio/generate — Generate Polly narration for episode content."""
+    body = get_body(event)
+    text_content = body.get('text', '')
+    episode_id = body.get('episode_id', '')
+    concept_name = body.get('concept_name', '')
+
+    if not text_content:
+        return respond(400, {"error": "text is required"})
+
+    # Check S3 cache first
+    cache_key = f"narrations/{hashlib.md5(episode_id.encode()).hexdigest()}.mp3"
+    try:
+        s3.head_object(Bucket=S3_CONTENT_BUCKET, Key=cache_key)
+        # Already exists — return presigned URL
+        audio_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': S3_CONTENT_BUCKET, 'Key': cache_key},
+            ExpiresIn=3600
+        )
+        return respond(200, {"audio_url": audio_url, "cached": True})
+    except Exception:
+        pass
+
+    # Strip HTML and clean text
+    clean_text = re.sub(r'<[^>]+>', ' ', text_content)
+    clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+
+    # Truncate for Polly (max 3000 chars for neural)
+    narration_text = clean_text[:2800]
+    if len(clean_text) > 2800:
+        narration_text += "..."
+
+    try:
+        polly_response = polly.synthesize_speech(
+            Text=narration_text,
+            OutputFormat='mp3',
+            VoiceId='Kajal',
+            Engine='neural'
+        )
+
+        audio_stream = polly_response['AudioStream'].read()
+        s3.put_object(
+            Bucket=S3_CONTENT_BUCKET,
+            Key=cache_key,
+            Body=audio_stream,
+            ContentType='audio/mpeg'
+        )
+
+        audio_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': S3_CONTENT_BUCKET, 'Key': cache_key},
+            ExpiresIn=3600
+        )
+        return respond(200, {"audio_url": audio_url, "cached": False})
+    except Exception as e:
+        print(f"Audio generation error: {e}")
+        return respond(500, {"error": f"Audio generation failed: {str(e)}"})
+
+
 def lambda_handler(event, context):
     http_method = event.get('httpMethod') or event.get('requestContext', {}).get('http', {}).get('method', '')
     if http_method == 'OPTIONS':
@@ -2585,6 +2846,10 @@ def lambda_handler(event, context):
             return handle_generate_notes_from_upload(event)
         elif http_method == 'GET' and '/notes/upload-url' in path:
             return handle_get_upload_url(event)
+        elif http_method == 'POST' and '/presentation/generate' in path:
+            return handle_generate_presentation(event)
+        elif http_method == 'POST' and '/audio/generate' in path:
+            return handle_generate_audio(event)
 
         return respond(404, {"error": f"Route not found: {http_method} {path}"})
     except Exception as e:

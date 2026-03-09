@@ -2,26 +2,26 @@
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { motion, AnimatePresence } from 'framer-motion';
-// ─── Prime Video Dark Theme Colors ───────────────────────────────────────────
+// ─── Warm Earthy Theme Colors ───────────────────────────────────────────
 const THEME = {
-  bg: '#0f171e',
-  surface: '#1a242f',
-  card: '#1a2b3c',
-  border: '#2a3642',
-  text: '#e2e8f0',
-  textMuted: '#94a3b8',
-  accent: '#00ace0',
-  accentAlt: '#f0c14b',
-  success: '#00d26a',
-  warning: '#fbbf24',
-  danger: '#f85149',
-  purple: '#bc8cff',
-  pink: '#f778ba',
-  cyan: '#00ace0',
-  orange: '#ffa657',
-  gradientStart: '#00ace0',
-  gradientEnd: '#f0c14b',
-  palette: ['#00ace0', '#f0c14b', '#00d26a', '#bc8cff', '#f778ba', '#ffa657', '#58a6ff', '#f85149', '#fbbf24', '#76e4f7'],
+  bg: '#F5EDE4',
+  surface: '#FFFFFF',
+  card: '#F0E7DC',
+  border: '#D8CCBE',
+  text: '#2A2018',
+  textMuted: '#9A8E82',
+  accent: '#C17C64',
+  accentAlt: '#D4A574',
+  success: '#8FA395',
+  warning: '#D4A574',
+  danger: '#C17C64',
+  purple: '#9B7EB5',
+  pink: '#C4889B',
+  cyan: '#7BA3B0',
+  orange: '#CB8A5E',
+  gradientStart: '#C17C64',
+  gradientEnd: '#D4A574',
+  palette: ['#C17C64', '#D4A574', '#8FA395', '#9B7EB5', '#C4889B', '#CB8A5E', '#7BA3B0', '#B8926A', '#A68E7B', '#6B8F7B'],
 };
 
 // ─── Icon map for visualization types ────────────────────────────────────────
@@ -74,58 +74,94 @@ function renderForceGraph(svgEl, data, dims) {
   const nodes = data.nodes || [];
   const links = data.links || [];
 
-  const simulation = d3.forceSimulation(nodes)
-    .force('link', d3.forceLink(links).id(d => d.id).distance(d => d.distance || 80))
-    .force('charge', d3.forceManyBody().strength(-200))
-    .force('center', d3.forceCenter(width / 2, height / 2))
-    .force('collision', d3.forceCollide().radius(40));
+  // ── Simulation: spread nodes across the full canvas ──
+  // Seed initial positions in a circle so the simulation doesn't collapse to a line
+  const angleStep = (2 * Math.PI) / nodes.length;
+  const initR = Math.min(width, height) * 0.3;
+  nodes.forEach((d, i) => {
+    if (d.x == null) d.x = width / 2 + initR * Math.cos(angleStep * i);
+    if (d.y == null) d.y = height / 2 + initR * Math.sin(angleStep * i);
+  });
 
-  // Run simulation to completion so nodes settle into fixed positions
+  // Filter out links that reference non-existent nodes
+  const nodeIds = new Set(nodes.map(n => n.id));
+  const validLinks = links.filter(l => nodeIds.has(l.source?.id ?? l.source) && nodeIds.has(l.target?.id ?? l.target));
+
+  const simulation = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(validLinks).id(d => d.id).distance(d => d.distance || 140).strength(0.3))
+    .force('charge', d3.forceManyBody().strength(-400))
+    .force('x', d3.forceX(width / 2).strength(0.04))
+    .force('y', d3.forceY(height / 2).strength(0.04))
+    .force('collision', d3.forceCollide().radius(65));
+
   simulation.tick(300);
   simulation.stop();
 
-  // Compute bounding box and scale to fit within SVG with padding
+  // ── Fit to viewport ──
   const pad = 60;
   let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
   nodes.forEach(d => { minX = Math.min(minX, d.x); maxX = Math.max(maxX, d.x); minY = Math.min(minY, d.y); maxY = Math.max(maxY, d.y); });
   const bw = (maxX - minX) || 1, bh = (maxY - minY) || 1;
-  const scale = Math.min((width - pad * 2) / bw, (height - pad * 2) / bh, 1.5);
-  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
-  const tx = width / 2 - cx * scale, ty = height / 2 - cy * scale;
+  const scale = Math.min((width - pad * 2) / bw, (height - pad * 2) / bh, 1.2);
+  const midX = (minX + maxX) / 2, midY = (minY + maxY) / 2;
+  const tx = width / 2 - midX * scale, ty = height / 2 - midY * scale;
 
   const g = svg.append('g').attr('transform', `translate(${tx},${ty}) scale(${scale})`);
 
-  const link = g.append('g').selectAll('line')
-    .data(links).join('line')
-    .attr('stroke', d => d.color || THEME.border)
-    .attr('stroke-width', d => (d.weight || 2) / scale)
-    .attr('stroke-opacity', 0.7)
-    .attr('marker-end', 'url(#arrowhead)')
-    .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
-    .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+  // ── Links (curved) ──
+  g.append('g').selectAll('path')
+    .data(links).join('path')
+    .attr('d', d => {
+      const dx = d.target.x - d.source.x, dy = d.target.y - d.source.y;
+      const dr = Math.sqrt(dx * dx + dy * dy) * 1.5;
+      return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+    })
+    .attr('fill', 'none')
+    .attr('stroke', THEME.border)
+    .attr('stroke-width', 1.5 / scale)
+    .attr('stroke-opacity', 0.4)
+    .attr('marker-end', 'url(#arrowhead)');
 
-  const linkLabel = g.append('g').selectAll('text')
-    .data(links.filter(l => l.label)).join('text')
+  // ── Link labels on the curve midpoint ──
+  const linkLabels = g.append('g').selectAll('g')
+    .data(links.filter(l => l.label)).join('g')
+    .attr('transform', d => {
+      const mx = (d.source.x + d.target.x) / 2;
+      const my = (d.source.y + d.target.y) / 2 - 16 / scale;
+      return `translate(${mx},${my})`;
+    });
+
+  // Background pill for readability
+  linkLabels.append('rect')
+    .attr('x', d => -(d.label.length * 3.5) - 4)
+    .attr('y', -7 / scale)
+    .attr('width', d => d.label.length * 7 + 8)
+    .attr('height', 14 / scale)
+    .attr('rx', 4).attr('fill', THEME.bg).attr('opacity', 0.85);
+
+  linkLabels.append('text')
     .text(d => d.label)
-    .attr('fill', THEME.textMuted).attr('font-size', 10 / scale).attr('text-anchor', 'middle')
-    .attr('x', d => (d.source.x + d.target.x) / 2).attr('y', d => (d.source.y + d.target.y) / 2);
+    .attr('text-anchor', 'middle')
+    .attr('fill', THEME.accent).attr('font-size', 9 / scale).attr('font-weight', 500);
 
+  // ── Nodes ──
   const nodeGroup = g.append('g').selectAll('g')
     .data(nodes).join('g')
     .attr('transform', d => `translate(${d.x},${d.y})`);
 
+  // Circle
   nodeGroup.append('circle')
-    .attr('r', d => d.size || 18)
+    .attr('r', d => d.size || 16)
     .attr('fill', (d, i) => d.color || THEME.palette[i % THEME.palette.length])
-    .attr('stroke', THEME.bg).attr('stroke-width', 2 / scale)
-    .attr('filter', 'url(#glow)')
-    .attr('opacity', 0.95);
+    .attr('stroke', '#fff').attr('stroke-width', 2.5 / scale)
+    .attr('opacity', 0.9);
 
+  // Label below node
   nodeGroup.append('text')
     .text(d => d.label || d.id)
-    .attr('dy', d => (d.size || 18) + 14)
+    .attr('dy', d => (d.size || 16) + 16 / scale)
     .attr('text-anchor', 'middle')
-    .attr('fill', THEME.text).attr('font-size', 12 / scale).attr('font-weight', 600);
+    .attr('fill', THEME.text).attr('font-size', 11 / scale).attr('font-weight', 600);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -762,44 +798,80 @@ function renderHeatmap(svgEl, data, dims) {
   const values = data.values || [];
   if (rows.length === 0 || cols.length === 0) return;
 
-  const margin = { top: 40, right: 20, bottom: 20, left: 80 };
+  const margin = { top: 50, right: 30, bottom: 30, left: 100 };
   const innerW = width - margin.left - margin.right;
   const innerH = height - margin.top - margin.bottom;
   const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-  const cellW = innerW / cols.length;
-  const cellH = innerH / rows.length;
+  // Compact cells — cap size so they don't get huge
+  const maxCellW = 80, maxCellH = 50;
+  const cellW = Math.min(maxCellW, innerW / cols.length);
+  const cellH = Math.min(maxCellH, innerH / rows.length);
+  const gap = 3;
 
-  const maxVal = d3.max(values.flat());
-  const colorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, maxVal]);
+  // Center the grid
+  const gridW = cols.length * cellW;
+  const gridH = rows.length * cellH;
+  const offX = (innerW - gridW) / 2;
+  const offY = (innerH - gridH) / 2;
+
+  const maxVal = d3.max(values.flat()) || 1;
+
+  // Theme-based color scale: light creme → sage → terracotta
+  const colorScale = d3.scaleLinear()
+    .domain([0, maxVal * 0.35, maxVal * 0.7, maxVal])
+    .range(['#EDE5DB', '#D4C5A9', '#D4A574', '#C17C64'])
+    .clamp(true);
 
   rows.forEach((row, ri) => {
     cols.forEach((col, ci) => {
       const val = (values[ri] || [])[ci] || 0;
+      const x = offX + ci * cellW;
+      const y = offY + ri * cellH;
+
       g.append('rect')
-        .attr('x', ci * cellW).attr('y', ri * cellH)
-        .attr('width', cellW - 2).attr('height', cellH - 2).attr('rx', 4)
-        .attr('fill', colorScale(val));
+        .attr('x', x + gap / 2).attr('y', y + gap / 2)
+        .attr('width', cellW - gap).attr('height', cellH - gap)
+        .attr('rx', 6)
+        .attr('fill', colorScale(val))
+        .attr('stroke', THEME.bg).attr('stroke-width', 1);
+
       g.append('text')
         .text(val)
-        .attr('x', ci * cellW + cellW / 2).attr('y', ri * cellH + cellH / 2 + 4)
-        .attr('text-anchor', 'middle').attr('fill', val > maxVal * 0.6 ? THEME.bg : THEME.text).attr('font-size', 11);
+        .attr('x', x + cellW / 2).attr('y', y + cellH / 2 + 4)
+        .attr('text-anchor', 'middle')
+        .attr('fill', val > maxVal * 0.6 ? '#FFF' : THEME.text)
+        .attr('font-size', 12).attr('font-weight', 600);
     });
   });
 
   // Row labels
   rows.forEach((r, i) => {
-    g.append('text').text(r).attr('x', -8).attr('y', i * cellH + cellH / 2 + 4)
-      .attr('text-anchor', 'end').attr('fill', THEME.textMuted).attr('font-size', 11);
+    g.append('text').text(r)
+      .attr('x', offX - 10).attr('y', offY + i * cellH + cellH / 2 + 4)
+      .attr('text-anchor', 'end').attr('fill', THEME.text).attr('font-size', 11).attr('font-weight', 500);
   });
 
   // Col labels
   cols.forEach((c, i) => {
-    g.append('text').text(c).attr('x', i * cellW + cellW / 2).attr('y', -10)
-      .attr('text-anchor', 'middle').attr('fill', THEME.textMuted).attr('font-size', 11);
+    g.append('text').text(c)
+      .attr('x', offX + i * cellW + cellW / 2).attr('y', offY - 10)
+      .attr('text-anchor', 'middle').attr('fill', THEME.text).attr('font-size', 11).attr('font-weight', 500);
   });
 
-  if (data.title) svg.append('text').attr('x', width / 2).attr('y', 16).attr('text-anchor', 'middle').attr('fill', THEME.text).attr('font-size', 14).attr('font-weight', 600).text(data.title);
+  // Legend bar
+  const legendW = 120, legendH = 8;
+  const legendX = offX + gridW - legendW;
+  const legendY = offY + gridH + 18;
+  const legendDefs = svg.append('defs');
+  const legendGrad = legendDefs.append('linearGradient').attr('id', 'hm-legend').attr('x1', 0).attr('y1', 0).attr('x2', 1).attr('y2', 0);
+  legendGrad.append('stop').attr('offset', '0%').attr('stop-color', '#EDE5DB');
+  legendGrad.append('stop').attr('offset', '50%').attr('stop-color', '#D4A574');
+  legendGrad.append('stop').attr('offset', '100%').attr('stop-color', '#C17C64');
+
+  g.append('rect').attr('x', legendX).attr('y', legendY).attr('width', legendW).attr('height', legendH).attr('rx', 4).attr('fill', 'url(#hm-legend)');
+  g.append('text').text('Low').attr('x', legendX - 4).attr('y', legendY + 7).attr('text-anchor', 'end').attr('fill', THEME.textMuted).attr('font-size', 9);
+  g.append('text').text('High').attr('x', legendX + legendW + 4).attr('y', legendY + 7).attr('text-anchor', 'start').attr('fill', THEME.textMuted).attr('font-size', 9);
 }
 
 

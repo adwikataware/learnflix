@@ -26,6 +26,19 @@ function FormatBadge({ format }) {
     );
 }
 
+// ─── Thumbnail icon helper ──────────────────────────────────────────────────────
+
+function getThumbnailIcon(format) {
+    const iconMap = {
+        'Code Lab': 'terminal',
+        'Visual Story': 'auto_stories',
+        'Concept X-Ray': 'layers',
+        'Quick Byte': 'bolt',
+        'Case Study': 'case_study',
+    };
+    return iconMap[format] || 'play_circle';
+}
+
 // ─── Episode Row Card ───────────────────────────────────────────────────────────
 
 function EpisodeRow({ episode, index, isActive, onClick }) {
@@ -36,7 +49,7 @@ function EpisodeRow({ episode, index, isActive, onClick }) {
             return (
                 <button
                     onClick={(e) => { e.stopPropagation(); onClick(episode); }}
-                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#00d26a]/10 border border-[#00d26a]/30 text-[#00d26a] hover:bg-[#00d26a]/20 transition-colors"
+                    className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#8FA395]/10 border border-[#8FA395]/30 text-[#8FA395] hover:bg-[#8FA395]/20 transition-colors"
                 >
                     Review
                 </button>
@@ -48,8 +61,8 @@ function EpisodeRow({ episode, index, isActive, onClick }) {
                     onClick={(e) => { e.stopPropagation(); onClick(episode); }}
                     className={`px-5 py-2 rounded-lg text-sm font-bold transition-all ${
                         episode.progress > 0
-                            ? 'bg-[#00ace0] text-white hover:brightness-110 shadow-[0_0_20px_rgba(0,172,224,0.2)]'
-                            : 'bg-[#f0c14b] text-[#0f171e] hover:brightness-110 shadow-[0_0_20px_rgba(240,193,75,0.2)]'
+                            ? 'bg-[#C17C64] text-white hover:brightness-110 shadow-[0_0_20px_rgba(193,124,100,0.2)]'
+                            : 'bg-[#D4A574] text-white hover:brightness-110 shadow-[0_0_20px_rgba(212,165,116,0.2)]'
                     }`}
                 >
                     {episode.progress > 0 ? 'Resume' : 'Start'}
@@ -57,7 +70,7 @@ function EpisodeRow({ episode, index, isActive, onClick }) {
             );
         }
         return (
-            <div className="flex items-center gap-2 text-slate-600">
+            <div className="flex items-center gap-2 text-[#9A8E82]">
                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>lock</span>
             </div>
         );
@@ -72,19 +85,19 @@ function EpisodeRow({ episode, index, isActive, onClick }) {
             transition={{ delay: 0.1 + index * 0.06, duration: 0.4 }}
             className={`relative rounded-xl border transition-all duration-300 cursor-pointer ${
                 isActive
-                    ? 'bg-[#1a242f] border-[#00ace0]/40 shadow-[0_0_30px_rgba(0,172,224,0.08)]'
+                    ? 'bg-white border-[#C17C64]/40 shadow-[0_0_30px_rgba(193,124,100,0.08)]'
                     : status === 'locked'
-                        ? 'bg-[#1a242f]/60 border-[#2a3642] opacity-60'
-                        : 'bg-[#1a242f] border-[#2a3642] hover:border-[#00ace0]/20'
+                        ? 'bg-white/60 border-[#D8CCBE] opacity-60'
+                        : 'bg-white border-[#D8CCBE] hover:border-[#C17C64]/20'
             }`}
             onClick={() => status !== 'locked' && onClick(episode)}
         >
             <div className="flex items-center gap-4 p-5">
                 {/* Episode number circle */}
                 <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm ${
-                    status === 'completed' ? 'bg-[#00d26a]/15 text-[#00d26a]' :
-                    status === 'active' ? 'bg-[#00ace0]/15 text-[#00ace0]' :
-                    'bg-slate-700/40 text-slate-500'
+                    status === 'completed' ? 'bg-[#8FA395]/15 text-[#8FA395]' :
+                    status === 'active' ? 'bg-[#C17C64]/15 text-[#C17C64]' :
+                    'bg-[#E2D8CC] text-[#9A8E82]'
                 }`}>
                     {status === 'completed' ? (
                         <span className="material-symbols-outlined" style={{ fontSize: 24, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
@@ -97,39 +110,45 @@ function EpisodeRow({ episode, index, isActive, onClick }) {
 
                 {/* Thumbnail placeholder */}
                 <div className={`w-20 h-14 rounded-lg flex-shrink-0 hidden sm:flex items-center justify-center ${
-                    status === 'completed' ? 'bg-gradient-to-br from-[#00d26a]/20 to-[#00ace0]/10' :
-                    status === 'active' ? 'bg-gradient-to-br from-[#00ace0]/20 to-[#f0c14b]/10' :
-                    'bg-gradient-to-br from-[#2a3642] to-[#1a242f]'
+                    status === 'completed' ? 'bg-gradient-to-br from-[#8FA395]/20 to-[#8FA395]/5 border border-[#8FA395]/20' :
+                    status === 'active' ? 'bg-gradient-to-br from-[#C17C64]/15 to-[#D4A574]/10 border border-[#C17C64]/20' :
+                    'bg-[#F0E7DC] border border-[#E2D8CC]'
                 }`}>
-                    <span className="material-symbols-outlined text-white/20" style={{ fontSize: 24 }}>play_circle</span>
+                    {status === 'completed' ? (
+                        <span className="material-symbols-outlined text-[#8FA395]/40" style={{ fontSize: 28, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    ) : status === 'active' ? (
+                        <span className="material-symbols-outlined text-[#C17C64]/40" style={{ fontSize: 28 }}>{getThumbnailIcon(episode.format)}</span>
+                    ) : (
+                        <span className="material-symbols-outlined text-[#9A8E82]/40" style={{ fontSize: 28 }}>lock</span>
+                    )}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">
+                        <span className="text-[11px] text-[#9A8E82] font-semibold uppercase tracking-wider">
                             Episode {index + 1}
                         </span>
                         {episode.format && <FormatBadge format={episode.format} />}
                     </div>
-                    <h3 className={`font-semibold truncate ${status === 'locked' ? 'text-slate-500' : 'text-white'}`}>
+                    <h3 className={`font-semibold truncate ${status === 'locked' ? 'text-[#9A8E82]' : 'text-[#2A2018]'}`}>
                         {episode.title || episode.concept_id || `Episode ${index + 1}`}
                     </h3>
                     {episode.description && (
-                        <p className="text-sm text-slate-500 mt-1 line-clamp-1">{episode.description}</p>
+                        <p className="text-sm text-[#6B5E52] mt-1 line-clamp-1">{episode.description}</p>
                     )}
                     {/* Progress bar for in-progress episodes */}
                     {status === 'active' && episode.progress > 0 && (
                         <div className="flex items-center gap-2 mt-2">
-                            <div className="flex-1 h-1.5 bg-[#2a3642] rounded-full overflow-hidden max-w-[200px]">
+                            <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden max-w-[200px]">
                                 <motion.div
-                                    className="h-full rounded-full bg-[#00ace0]"
+                                    className="h-full rounded-full bg-[#C17C64]"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progressPct}%` }}
                                     transition={{ duration: 0.8, delay: 0.3 }}
                                 />
                             </div>
-                            <span className="text-[11px] font-bold text-[#00ace0]">{progressPct}%</span>
+                            <span className="text-[11px] font-bold text-[#C17C64]">{progressPct}%</span>
                         </div>
                     )}
                 </div>
@@ -258,8 +277,8 @@ function SeasonDetail() {
             <AppLayout>
                 <div className="flex items-center justify-center min-h-[60vh]">
                     <div className="flex flex-col items-center gap-4">
-                        <div className="w-12 h-12 border-2 border-[#00ace0] border-t-transparent rounded-full animate-spin" />
-                        <p className="text-slate-500 text-sm">Loading season...</p>
+                        <div className="w-12 h-12 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
+                        <p className="text-[#9A8E82] text-sm">Loading season...</p>
                     </div>
                 </div>
             </AppLayout>
@@ -275,7 +294,7 @@ function SeasonDetail() {
                     <p className="text-red-400 text-lg">{error}</p>
                     <button
                         onClick={() => router.push('/home')}
-                        className="px-5 py-2.5 rounded-lg bg-[#1a242f] border border-[#2a3642] text-white text-sm hover:border-[#00ace0]/40 transition-colors"
+                        className="px-5 py-2.5 rounded-lg bg-white border border-[#D8CCBE] text-[#2A2018] text-sm hover:border-[#C17C64]/40 transition-colors"
                     >
                         Back to Home
                     </button>
@@ -294,8 +313,8 @@ function SeasonDetail() {
                     className="relative overflow-hidden"
                 >
                     {/* Gradient background */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#00ace0]/15 via-[#1a242f] to-[#f0c14b]/5" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0f171e] via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#C17C64]/10 via-white to-[#D4A574]/5" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#F5EDE4] via-transparent to-transparent" />
 
                     <div className="relative px-6 lg:px-8 pt-8 pb-10">
                         {/* Breadcrumb */}
@@ -307,22 +326,22 @@ function SeasonDetail() {
                         >
                             <button
                                 onClick={() => router.push('/home')}
-                                className="text-slate-500 hover:text-white transition-colors flex items-center gap-1"
+                                className="text-[#9A8E82] hover:text-[#2A2018] transition-colors flex items-center gap-1"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: 18 }}>home</span>
                                 Home
                             </button>
-                            <span className="text-slate-600">/</span>
-                            <span className="text-slate-500">Seasons</span>
-                            <span className="text-slate-600">/</span>
-                            <span className="text-[#00ace0] font-medium truncate">{season?.title}</span>
+                            <span className="text-[#9A8E82]">/</span>
+                            <span className="text-[#9A8E82]">Seasons</span>
+                            <span className="text-[#9A8E82]">/</span>
+                            <span className="text-[#C17C64] font-medium truncate">{season?.title}</span>
                         </motion.div>
 
                         <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.15 }}
-                            className="text-3xl lg:text-4xl font-extrabold text-white mb-3 font-[Manrope]"
+                            className="text-3xl lg:text-4xl font-extrabold text-[#2A2018] mb-3 font-[Manrope]"
                         >
                             {season?.title}
                         </motion.h1>
@@ -330,7 +349,7 @@ function SeasonDetail() {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="text-slate-400 text-base leading-relaxed max-w-2xl mb-6"
+                            className="text-[#6B5E52] text-base leading-relaxed max-w-2xl mb-6"
                         >
                             {season?.description}
                         </motion.p>
@@ -343,24 +362,24 @@ function SeasonDetail() {
                             className="flex flex-wrap items-center gap-6"
                         >
                             <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[#00ace0]" style={{ fontSize: 20 }}>play_circle</span>
-                                <span className="text-white font-semibold text-sm">{episodes.length} Episodes</span>
+                                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 20 }}>play_circle</span>
+                                <span className="text-[#2A2018] font-semibold text-sm">{episodes.length} Episodes</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <span className="material-symbols-outlined text-[#00d26a]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                                <span className="text-white font-semibold text-sm">{completedCount}/{episodes.length} Completed</span>
+                                <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                <span className="text-[#2A2018] font-semibold text-sm">{completedCount}/{episodes.length} Completed</span>
                             </div>
                             <div className="flex-1 min-w-[140px] max-w-xs">
                                 <div className="flex items-center justify-between mb-1">
-                                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Progress</span>
-                                    <span className="text-xs font-bold text-[#00ace0]">{progressPct}%</span>
+                                    <span className="text-[10px] text-[#9A8E82] uppercase tracking-wider font-bold">Progress</span>
+                                    <span className="text-xs font-bold text-[#C17C64]">{progressPct}%</span>
                                 </div>
-                                <div className="h-2.5 bg-[#1a242f] rounded-full overflow-hidden border border-[#2a3642]">
+                                <div className="h-2.5 bg-[#E2D8CC] rounded-full overflow-hidden border border-[#D8CCBE]">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         animate={{ width: `${progressPct}%` }}
                                         transition={{ duration: 1, ease: 'easeOut', delay: 0.5 }}
-                                        className="h-full bg-gradient-to-r from-[#00ace0] to-[#00d26a] rounded-full"
+                                        className="h-full bg-gradient-to-r from-[#C17C64] to-[#8FA395] rounded-full"
                                     />
                                 </div>
                             </div>
@@ -374,17 +393,17 @@ function SeasonDetail() {
                         <motion.div
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="rounded-xl bg-[#00ace0]/10 border border-[#00ace0]/20 p-4 flex items-start gap-3"
+                            className="rounded-xl bg-[#C17C64]/10 border border-[#C17C64]/20 p-4 flex items-start gap-3"
                         >
-                            <span className="material-symbols-outlined text-[#00ace0] mt-0.5" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>sprint</span>
+                            <span className="material-symbols-outlined text-[#C17C64] mt-0.5" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>sprint</span>
                             <div>
-                                <h4 className="text-white font-semibold text-sm mb-1">Bridge Sprint Active</h4>
-                                <p className="text-slate-400 text-sm">
+                                <h4 className="text-[#2A2018] font-semibold text-sm mb-1">Bridge Sprint Active</h4>
+                                <p className="text-[#6B5E52] text-sm">
                                     You have {missingPrereqs.length} prerequisite{missingPrereqs.length > 1 ? 's' : ''} to cover before unlocking all episodes.
                                 </p>
                                 <div className="flex flex-wrap gap-2 mt-2">
                                     {missingPrereqs.map((p, i) => (
-                                        <span key={i} className="text-xs bg-[#00ace0]/15 text-[#00ace0] px-2.5 py-1 rounded-full border border-[#00ace0]/20">
+                                        <span key={i} className="text-xs bg-[#C17C64]/15 text-[#C17C64] px-2.5 py-1 rounded-full border border-[#C17C64]/20">
                                             {p}
                                         </span>
                                     ))}
@@ -394,15 +413,57 @@ function SeasonDetail() {
                     </div>
                 )}
 
+                {/* ── Season Complete Banner ── */}
+                {completedCount === episodes.length && episodes.length > 0 && (
+                    <div className="px-6 lg:px-8 mb-6">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="rounded-2xl overflow-hidden relative"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#2A2018] via-[#3D3228] to-[#2A2018]" />
+                            <motion.div
+                                className="absolute top-0 left-1/3 w-64 h-64 rounded-full"
+                                style={{ background: 'radial-gradient(circle, rgba(212,165,116,0.15) 0%, transparent 70%)' }}
+                                animate={{ x: [0, 20, -10, 0], y: [0, -10, 10, 0] }}
+                                transition={{ duration: 6, repeat: Infinity }}
+                            />
+                            <div className="relative px-8 py-8 flex items-center justify-between gap-6">
+                                <div className="flex items-center gap-5">
+                                    <motion.div
+                                        animate={{ rotate: [0, -5, 5, 0] }}
+                                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                        className="size-16 rounded-xl bg-gradient-to-br from-[#D4A574] to-[#C17C64] flex items-center justify-center shadow-[0_0_30px_rgba(212,165,116,0.3)]"
+                                    >
+                                        <span className="material-symbols-outlined text-white" style={{ fontSize: 32, fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+                                    </motion.div>
+                                    <div>
+                                        <p className="text-[#D4A574] text-xs font-bold uppercase tracking-[0.2em] mb-1">All Episodes Complete</p>
+                                        <h3 className="text-xl font-bold text-white">Season Finale Unlocked!</h3>
+                                        <p className="text-[#9A8E82] text-sm mt-1">View your achievements, leaderboard rank & what's next.</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => router.push(`/season/${seasonId}/finale`)}
+                                    className="flex items-center gap-2 bg-gradient-to-r from-[#D4A574] to-[#C17C64] text-white font-bold text-sm px-6 py-3.5 rounded-xl hover:brightness-110 transition-all shadow-[0_0_20px_rgba(212,165,116,0.25)] flex-shrink-0"
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>celebration</span>
+                                    View Finale
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
                 {/* ── Episode List ── */}
                 <div className="px-6 lg:px-8 pb-10">
                     <div className="mb-5 flex items-center justify-between">
-                        <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[#00ace0]" style={{ fontSize: 22 }}>list</span>
+                        <h2 className="text-lg font-bold text-[#2A2018] flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22 }}>list</span>
                             Episodes
-                            <span className="text-sm font-normal text-slate-500 ml-1">({episodes.length})</span>
+                            <span className="text-sm font-normal text-[#9A8E82] ml-1">({episodes.length})</span>
                         </h2>
-                        <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
+                        <span className="text-xs text-[#9A8E82] uppercase tracking-wider font-semibold">
                             {completedCount} of {episodes.length} complete
                         </span>
                     </div>
@@ -421,8 +482,8 @@ function SeasonDetail() {
 
                     {episodes.length === 0 && (
                         <div className="text-center py-16">
-                            <span className="material-symbols-outlined text-slate-600 mb-3" style={{ fontSize: 48 }}>movie</span>
-                            <p className="text-slate-500">No episodes found for this season.</p>
+                            <span className="material-symbols-outlined text-[#9A8E82] mb-3" style={{ fontSize: 48 }}>movie</span>
+                            <p className="text-[#9A8E82]">No episodes found for this season.</p>
                         </div>
                     )}
                 </div>
@@ -436,8 +497,8 @@ function SeasonDetail() {
 export default function SeasonDetailPage() {
     return (
         <Suspense fallback={
-            <div className="flex items-center justify-center min-h-screen bg-[#0f171e]">
-                <div className="w-10 h-10 border-2 border-[#00ace0] border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="w-10 h-10 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
             </div>
         }>
             <SeasonDetail />

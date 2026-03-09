@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
 import { getLearnerName, getLearnerId, getConstellation } from '@/lib/api';
 
-const STATUS_COLORS = { mastered: '#00d26a', active: '#00ace0', locked: '#64748b' };
+const STATUS_COLORS = { mastered: '#8FA395', active: '#C17C64', locked: '#9A8E82' };
 const STATUS_ICONS = { mastered: 'check_circle', active: 'play_circle', locked: 'lock' };
 
 export default function AppLayout({ children, hideHeader = false }) {
@@ -80,12 +80,12 @@ export default function AppLayout({ children, hideHeader = false }) {
             <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
             <div className="w-64 flex-shrink-0 hidden lg:block" />
 
-            <div className="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden">
+            <div className="flex-1 flex flex-col min-h-screen w-full overflow-x-hidden overflow-y-auto">
                 {!hideHeader && (
                     <header className="sticky top-0 z-30 flex items-center justify-between px-6 lg:px-8 py-3 glass-panel border-b border-border-dark">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-slate-400 hover:text-white transition-colors"
+                            className="lg:hidden p-2 -ml-2 text-[#6B5E52] hover:text-[#2A2018] transition-colors"
                         >
                             <span className="material-symbols-outlined" style={{ fontSize: 24 }}>menu</span>
                         </button>
@@ -94,20 +94,20 @@ export default function AppLayout({ children, hideHeader = false }) {
                         <div className="flex-1 max-w-xl hidden sm:block">
                             <button
                                 onClick={() => setSearchOpen(true)}
-                                className="w-full flex items-center gap-3 bg-surface-dark border border-border-dark rounded-full py-2.5 pl-4 pr-4 text-sm text-slate-500 hover:border-primary/40 transition-all"
+                                className="w-full flex items-center gap-3 bg-surface-dark border border-border-dark rounded-full py-2.5 pl-4 pr-4 text-sm text-[#9A8E82] hover:border-primary/40 transition-all"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>search</span>
                                 <span>Search courses, concepts, or skills...</span>
-                                <kbd className="ml-auto hidden lg:inline-flex items-center gap-0.5 text-[10px] text-slate-600 bg-[#1a242f] border border-[#2a3642] px-2 py-0.5 rounded-md font-mono">/</kbd>
+                                <kbd className="ml-auto hidden lg:inline-flex items-center gap-0.5 text-[10px] text-[#9A8E82] bg-[#F0E7DC] border border-[#D8CCBE] px-2 py-0.5 rounded-md font-mono">/</kbd>
                             </button>
                         </div>
 
                         <div className="flex items-center gap-4 lg:gap-6 ml-auto">
                             <div className="hidden md:flex items-center gap-2">
                                 <span className="material-symbols-outlined text-orange-500 animate-pulse" style={{ fontVariationSettings: "'FILL' 1", fontSize: 22 }}>local_fire_department</span>
-                                <span className="text-slate-100 font-bold text-sm">{streak} Day Streak</span>
+                                <span className="text-[#2A2018] font-bold text-sm">{streak} Day Streak</span>
                             </div>
-                            <button className="relative text-slate-400 hover:text-slate-100 transition-colors">
+                            <button className="relative text-[#6B5E52] hover:text-[#2A2018] transition-colors">
                                 <span className="material-symbols-outlined" style={{ fontSize: 22 }}>notifications</span>
                                 <span className="absolute -top-0.5 -right-0.5 size-2 bg-primary rounded-full border-2 border-bg-dark" />
                             </button>
@@ -116,11 +116,11 @@ export default function AppLayout({ children, hideHeader = false }) {
                                 onClick={() => router.push('/profile')}
                             >
                                 <div className="text-right hidden sm:block">
-                                    <p className="text-sm font-bold text-slate-100 leading-none">{learnerName}</p>
+                                    <p className="text-sm font-bold text-[#2A2018] leading-none">{learnerName}</p>
                                     <p className="text-[10px] text-primary uppercase tracking-wider font-bold mt-0.5">Active Learner</p>
                                 </div>
                                 <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-primary/40 flex items-center justify-center">
-                                    <span className="text-bg-dark font-extrabold text-sm">{learnerName.charAt(0).toUpperCase()}</span>
+                                    <span className="text-white font-extrabold text-sm">{learnerName.charAt(0).toUpperCase()}</span>
                                 </div>
                             </div>
                         </div>
@@ -131,17 +131,17 @@ export default function AppLayout({ children, hideHeader = false }) {
                 {searchOpen && (
                     <div className="fixed inset-0 z-50 flex flex-col">
                         {/* Backdrop */}
-                        <div className="absolute inset-0 bg-[#0a0f14]/90 backdrop-blur-md" onClick={() => setSearchOpen(false)} />
+                        <div className="absolute inset-0 bg-[#2A2018]/70 backdrop-blur-md" onClick={() => setSearchOpen(false)} />
 
                         {/* Overlay content */}
                         <div className="relative z-10 flex flex-col h-full max-w-5xl mx-auto w-full px-6 pt-8">
                             {/* Search bar */}
                             <div className="flex items-center gap-4 mb-8">
                                 <div className="flex-1 relative">
-                                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" style={{ fontSize: 24 }}>search</span>
+                                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6B5E52]" style={{ fontSize: 24 }}>search</span>
                                     <input
                                         ref={searchInputRef}
-                                        className="w-full bg-[#1a242f] border border-[#2a3642] rounded-2xl py-4 pl-14 pr-6 text-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                                        className="w-full bg-white border border-[#D8CCBE] rounded-2xl py-4 pl-14 pr-6 text-lg text-[#2A2018] placeholder-[#9A8E82] focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
                                         placeholder="What do you want to learn?"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -149,18 +149,18 @@ export default function AppLayout({ children, hideHeader = false }) {
                                 </div>
                                 <button
                                     onClick={() => setSearchOpen(false)}
-                                    className="size-12 rounded-xl bg-[#1a242f] border border-[#2a3642] flex items-center justify-center text-slate-400 hover:text-white hover:border-slate-500 transition-all flex-shrink-0"
+                                    className="size-12 rounded-xl bg-white border border-[#D8CCBE] flex items-center justify-center text-[#6B5E52] hover:text-[#2A2018] hover:border-[#9A8E82] transition-all flex-shrink-0"
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 22 }}>close</span>
                                 </button>
                             </div>
 
                             {/* Content area */}
-                            <div className="flex-1 overflow-y-auto pb-12" style={{ scrollbarWidth: 'thin', scrollbarColor: '#2a3642 transparent' }}>
+                            <div className="flex-1 overflow-y-auto pb-12" style={{ scrollbarWidth: 'thin', scrollbarColor: '#D8CCBE transparent' }}>
                                 {/* Searching — show filtered results as cards */}
                                 {searchQuery.trim().length > 0 ? (
                                     <div>
-                                        <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-4">
+                                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4">
                                             {filteredCourses.length} result{filteredCourses.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
                                         </p>
                                         {filteredCourses.length > 0 ? (
@@ -169,10 +169,10 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                     <button
                                                         key={node.concept_id}
                                                         onClick={() => handleSelect(node)}
-                                                        className={`text-left bg-[#141c26] border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
+                                                        className={`text-left bg-white border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
                                                             node.status === 'locked'
-                                                                ? 'border-[#2a3642] opacity-50 cursor-not-allowed'
-                                                                : 'border-[#2a3642] hover:border-primary/40 cursor-pointer'
+                                                                ? 'border-[#D8CCBE] opacity-50 cursor-not-allowed'
+                                                                : 'border-[#D8CCBE] hover:border-primary/40 cursor-pointer'
                                                         }`}
                                                     >
                                                         <div className="flex items-center justify-between mb-3">
@@ -185,9 +185,9 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                                 {node.status}
                                                             </span>
                                                         </div>
-                                                        <h4 className="text-white text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
+                                                        <h4 className="text-[#2A2018] text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
                                                         <div className="flex items-center gap-2">
-                                                            <div className="flex-1 h-1 bg-[#232f3e] rounded-full overflow-hidden">
+                                                            <div className="flex-1 h-1 bg-[#E2D8CC] rounded-full overflow-hidden">
                                                                 <div className="h-full rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%`, backgroundColor: STATUS_COLORS[node.status] }} />
                                                             </div>
                                                             <span className="text-[10px] font-bold" style={{ color: STATUS_COLORS[node.status] }}>{Math.round(node.mastery * 100)}%</span>
@@ -197,9 +197,9 @@ export default function AppLayout({ children, hideHeader = false }) {
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-16">
-                                                <span className="material-symbols-outlined text-slate-700 mb-3" style={{ fontSize: 56 }}>search_off</span>
-                                                <p className="text-slate-500 text-lg font-semibold">No courses found</p>
-                                                <p className="text-slate-600 text-sm mt-1">Try a different search term</p>
+                                                <span className="material-symbols-outlined text-[#9A8E82] mb-3" style={{ fontSize: 56 }}>search_off</span>
+                                                <p className="text-[#9A8E82] text-lg font-semibold">No courses found</p>
+                                                <p className="text-[#9A8E82] text-sm mt-1">Try a different search term</p>
                                             </div>
                                         )}
                                     </div>
@@ -208,7 +208,7 @@ export default function AppLayout({ children, hideHeader = false }) {
                                         {/* Continue Learning */}
                                         {activeCourses.length > 0 && (
                                             <div className="mb-8">
-                                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
+                                                <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4 flex items-center gap-2">
                                                     <span className="material-symbols-outlined text-primary" style={{ fontSize: 16 }}>play_circle</span>
                                                     Continue Learning
                                                 </p>
@@ -217,19 +217,19 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                         <button
                                                             key={node.concept_id}
                                                             onClick={() => handleSelect(node)}
-                                                            className="text-left bg-[#141c26] border border-[#00ace0]/20 rounded-xl p-4 transition-all group hover:scale-[1.03] hover:border-primary/50 cursor-pointer relative overflow-hidden"
+                                                            className="text-left bg-white border border-[#C17C64]/20 rounded-xl p-4 transition-all group hover:scale-[1.03] hover:border-primary/50 cursor-pointer relative overflow-hidden"
                                                         >
-                                                            <div className="absolute inset-0 bg-gradient-to-br from-[#00ace0]/5 to-transparent pointer-events-none" />
+                                                            <div className="absolute inset-0 bg-gradient-to-br from-[#C17C64]/5 to-transparent pointer-events-none" />
                                                             <div className="relative">
-                                                                <div className="size-10 rounded-lg bg-[#00ace0]/10 flex items-center justify-center mb-3">
-                                                                    <span className="material-symbols-outlined text-[#00ace0]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
+                                                                <div className="size-10 rounded-lg bg-[#C17C64]/10 flex items-center justify-center mb-3">
+                                                                    <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
                                                                 </div>
-                                                                <h4 className="text-white text-sm font-semibold mb-2 group-hover:text-primary transition-colors">{node.label}</h4>
+                                                                <h4 className="text-[#2A2018] text-sm font-semibold mb-2 group-hover:text-primary transition-colors">{node.label}</h4>
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="flex-1 h-1.5 bg-[#232f3e] rounded-full overflow-hidden">
-                                                                        <div className="h-full bg-[#00ace0] rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%` }} />
+                                                                    <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-[#C17C64] rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%` }} />
                                                                     </div>
-                                                                    <span className="text-[11px] font-bold text-[#00ace0]">{Math.round(node.mastery * 100)}%</span>
+                                                                    <span className="text-[11px] font-bold text-[#C17C64]">{Math.round(node.mastery * 100)}%</span>
                                                                 </div>
                                                             </div>
                                                         </button>
@@ -241,8 +241,8 @@ export default function AppLayout({ children, hideHeader = false }) {
                                         {/* All Seasons */}
                                         {courseNodes.length > 0 && (
                                             <div className="mb-8">
-                                                <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-                                                    <span className="material-symbols-outlined text-[#f0c14b]" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>star</span>
+                                                <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4 flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>star</span>
                                                     All Seasons
                                                 </p>
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -250,10 +250,10 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                         <button
                                                             key={node.concept_id}
                                                             onClick={() => handleSelect(node)}
-                                                            className={`text-left bg-[#141c26] border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
+                                                            className={`text-left bg-white border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
                                                                 node.status === 'locked'
-                                                                    ? 'border-[#2a3642] opacity-40 cursor-not-allowed'
-                                                                    : 'border-[#2a3642] hover:border-primary/40 cursor-pointer'
+                                                                    ? 'border-[#D8CCBE] opacity-40 cursor-not-allowed'
+                                                                    : 'border-[#D8CCBE] hover:border-primary/40 cursor-pointer'
                                                             }`}
                                                         >
                                                             <div className="flex items-center justify-between mb-3">
@@ -266,9 +266,9 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                                     {node.status}
                                                                 </span>
                                                             </div>
-                                                            <h4 className="text-white text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
+                                                            <h4 className="text-[#2A2018] text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
                                                             <div className="flex items-center gap-2">
-                                                                <div className="flex-1 h-1 bg-[#232f3e] rounded-full overflow-hidden">
+                                                                <div className="flex-1 h-1 bg-[#E2D8CC] rounded-full overflow-hidden">
                                                                     <div className="h-full rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%`, backgroundColor: STATUS_COLORS[node.status] }} />
                                                                 </div>
                                                                 <span className="text-[10px] font-bold" style={{ color: STATUS_COLORS[node.status] }}>{Math.round(node.mastery * 100)}%</span>
@@ -281,24 +281,24 @@ export default function AppLayout({ children, hideHeader = false }) {
 
                                         {/* Quick Links Row */}
                                         <div>
-                                            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-slate-500" style={{ fontSize: 16 }}>link</span>
+                                            <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[#9A8E82]" style={{ fontSize: 16 }}>link</span>
                                                 Quick Links
                                             </p>
                                             <div className="flex gap-3">
                                                 {[
-                                                    { icon: 'psychology', label: 'AI Mentor', path: '/mentor', color: '#00ace0' },
-                                                    { icon: 'analytics', label: 'Dashboard', path: '/dashboard', color: '#f0c14b' },
-                                                    { icon: 'hub', label: 'Constellation', path: '/home', color: '#00d26a' },
-                                                    { icon: 'swap_horiz', label: 'Change Topic', path: '/onboarding', color: '#e879f9' },
+                                                    { icon: 'psychology', label: 'AI Mentor', path: '/mentor', color: '#C17C64' },
+                                                    { icon: 'analytics', label: 'Dashboard', path: '/dashboard', color: '#D4A574' },
+                                                    { icon: 'hub', label: 'Constellation', path: '/home', color: '#8FA395' },
+                                                    { icon: 'swap_horiz', label: 'Change Topic', path: '/onboarding', color: '#B8926A' },
                                                 ].map((link) => (
                                                     <button
                                                         key={link.path}
                                                         onClick={() => { setSearchOpen(false); router.push(link.path); }}
-                                                        className="flex items-center gap-3 bg-[#141c26] border border-[#2a3642] rounded-xl px-5 py-3 hover:border-primary/30 transition-all group"
+                                                        className="flex items-center gap-3 bg-white border border-[#D8CCBE] rounded-xl px-5 py-3 hover:border-primary/30 transition-all group"
                                                     >
                                                         <span className="material-symbols-outlined" style={{ fontSize: 20, color: link.color }}>{link.icon}</span>
-                                                        <span className="text-sm text-slate-300 group-hover:text-white font-semibold">{link.label}</span>
+                                                        <span className="text-sm text-[#3D3228] group-hover:text-[#2A2018] font-semibold">{link.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -310,7 +310,7 @@ export default function AppLayout({ children, hideHeader = false }) {
                     </div>
                 )}
 
-                <main className="flex-1 overflow-y-auto">
+                <main className="flex-1">
                     {children}
                 </main>
             </div>

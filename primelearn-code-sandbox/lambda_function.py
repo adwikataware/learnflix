@@ -67,7 +67,7 @@ def timeout_handler(signum, frame):
     raise TimeoutError("Code execution timed out (max 10 seconds)")
 
 
-def execute_python(code):
+def execute_python(code, stdin=''):
     """Execute Python code with restricted builtins, timeout, and output capture."""
     is_valid, error_msg = validate_code(code)
     if not is_valid:
@@ -75,13 +75,23 @@ def execute_python(code):
 
     output_buffer = io.StringIO()
 
+    # Create input() that reads from provided stdin
+    stdin_lines = stdin.strip().split('\n') if stdin.strip() else []
+    stdin_idx = [0]
+    def safe_input(*args):
+        if stdin_idx[0] < len(stdin_lines):
+            line = stdin_lines[stdin_idx[0]]
+            stdin_idx[0] += 1
+            return line
+        return ''
+
     safe_builtins = {
         'print': print, 'range': range, 'len': len, 'int': int, 'float': float,
         'str': str, 'bool': bool, 'list': list, 'dict': dict, 'set': set,
         'tuple': tuple, 'enumerate': enumerate, 'zip': zip, 'map': map,
         'filter': filter, 'sorted': sorted, 'reversed': reversed,
         'sum': sum, 'min': min, 'max': max, 'abs': abs, 'round': round,
-        'isinstance': isinstance, 'type': type, 'input': lambda *a: '',
+        'isinstance': isinstance, 'type': type, 'input': safe_input,
         'True': True, 'False': False, 'None': None,
         'chr': chr, 'ord': ord, 'hex': hex, 'bin': bin, 'oct': oct,
         'all': all, 'any': any, 'hash': hash, 'repr': repr,
@@ -268,85 +278,71 @@ def execute_sql(code):
         return {"success": False, "output": "", "error": f"SQL Error: {str(e)}"}
 
 
-def execute_compiled(code, language):
-    """Execute C, C++, or Java code via subprocess compilation and run."""
-    tmp_dir = tempfile.mkdtemp(prefix='sandbox_')
+def execute_compiled(code, language, stdin=''):
+    """Execute C++/Java code using Godbolt Compiler Explorer API."""
+    import urllib.request
+
+    if language == 'cpp':
+        compiler_id = 'g132'
+    elif language == 'java':
+        compiler_id = 'java2100'
+        code = code.replace('public class Main', 'class Main')
+    else:
+        return {"success": False, "output": "", "error": f"Language '{language}' is not supported."}
+
+    payload = json.dumps({
+        "source": code,
+        "options": {
+            "userArguments": "-O2" if language == 'cpp' else "",
+            "executeParameters": {"args": [], "stdin": stdin},
+            "compilerOptions": {"executorRequest": True}
+        }
+    }).encode('utf-8')
+
+    req = urllib.request.Request(
+        f"https://godbolt.org/api/compiler/{compiler_id}/compile",
+        data=payload,
+        headers={"Content-Type": "application/json", "Accept": "application/json"},
+    )
+
     try:
-        if language == 'c':
-            src_file = os.path.join(tmp_dir, 'main.c')
-            out_file = os.path.join(tmp_dir, 'main')
-            with open(src_file, 'w') as f:
-                f.write(code)
-            # Compile
-            comp = subprocess.run(
-                ['gcc', src_file, '-o', out_file, '-lm'],
-                capture_output=True, text=True, timeout=MAX_EXEC_TIME
-            )
-            if comp.returncode != 0:
-                return {"success": False, "output": "", "error": f"Compilation Error:\n{comp.stderr}"}
-            # Run
-            run = subprocess.run(
-                [out_file], capture_output=True, text=True, timeout=MAX_EXEC_TIME
-            )
+        resp = urllib.request.urlopen(req, timeout=20)
+        result = json.loads(resp.read().decode())
 
-        elif language == 'cpp':
-            src_file = os.path.join(tmp_dir, 'main.cpp')
-            out_file = os.path.join(tmp_dir, 'main')
-            with open(src_file, 'w') as f:
-                f.write(code)
-            comp = subprocess.run(
-                ['g++', src_file, '-o', out_file, '-std=c++17'],
-                capture_output=True, text=True, timeout=MAX_EXEC_TIME
-            )
-            if comp.returncode != 0:
-                return {"success": False, "output": "", "error": f"Compilation Error:\n{comp.stderr}"}
-            run = subprocess.run(
-                [out_file], capture_output=True, text=True, timeout=MAX_EXEC_TIME
-            )
+        stdout_lines = [item.get('text', '') for item in result.get('stdout', [])]
+        stderr_lines = [item.get('text', '') for item in result.get('stderr', [])]
+        asm_lines = [item.get('text', '') for item in result.get('asm', [])]
 
-        elif language == 'java':
-            src_file = os.path.join(tmp_dir, 'Main.java')
-            with open(src_file, 'w') as f:
-                f.write(code)
-            comp = subprocess.run(
-                ['javac', src_file],
-                capture_output=True, text=True, timeout=MAX_EXEC_TIME
-            )
-            if comp.returncode != 0:
-                return {"success": False, "output": "", "error": f"Compilation Error:\n{comp.stderr}"}
-            run = subprocess.run(
-                ['java', '-cp', tmp_dir, 'Main'],
-                capture_output=True, text=True, timeout=MAX_EXEC_TIME
-            )
-        else:
-            return {"success": False, "output": "", "error": f"Unsupported compiled language: {language}"}
+        output = '\n'.join(stdout_lines)
+        errors = '\n'.join(stderr_lines)
 
-        output = run.stdout
         if len(output) > MAX_OUTPUT_SIZE:
             output = output[:MAX_OUTPUT_SIZE] + "\n... [Output truncated]"
 
-        if run.returncode != 0:
-            return {"success": False, "output": output, "error": f"Runtime Error:\n{run.stderr}"}
+        exit_code = result.get('code', 0)
+
+        # Compilation error (check buildResult for compile errors)
+        build_result = result.get('buildResult', {})
+        build_stderr = '\n'.join([item.get('text', '') for item in build_result.get('stderr', [])])
+        if build_result.get('code', 0) != 0:
+            return {"success": False, "output": "", "error": f"Compilation Error:\n{build_stderr}"}
+
+        if exit_code != 0:
+            return {"success": False, "output": output, "error": f"Runtime Error (exit code {exit_code}):\n{errors}"}
 
         return {"success": True, "output": output, "error": None}
 
-    except subprocess.TimeoutExpired:
-        return {"success": False, "output": "", "error": "Code execution timed out (max 10 seconds)"}
-    except FileNotFoundError as e:
-        compiler = 'gcc' if language == 'c' else 'g++' if language == 'cpp' else 'javac'
-        return {"success": False, "output": "", "error": f"Compiler '{compiler}' not available in this environment. Try Python or SQL."}
+    except urllib.error.URLError as e:
+        return {"success": False, "output": "", "error": f"Compiler service unavailable: {str(e)}"}
     except Exception as e:
         return {"success": False, "output": "", "error": str(e)}
-    finally:
-        # Cleanup
-        import shutil
-        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 def handle_execute(event):
     body = get_body(event)
     code = body.get('code')
     language = body.get('language', 'python').lower()
+    stdin = body.get('stdin', '')
 
     if not code:
         return respond(400, {"error": "code is required"})
@@ -354,11 +350,11 @@ def handle_execute(event):
         return respond(200, {"success": True, "output": "", "error": None})
 
     if language == 'python':
-        result = execute_python(code)
+        result = execute_python(code, stdin=stdin)
     elif language == 'sql':
         result = execute_sql(code)
     elif language in ('c', 'cpp', 'java'):
-        result = execute_compiled(code, language)
+        result = execute_compiled(code, language, stdin=stdin)
     else:
         result = {
             "success": False, "output": "",

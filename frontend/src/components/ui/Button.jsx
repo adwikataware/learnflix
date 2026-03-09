@@ -9,12 +9,12 @@ export function Button({
     const baseStyles = 'inline-flex items-center justify-center font-bold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95';
 
     const variants = {
-        primary: 'bg-accent text-bg-dark hover:brightness-110 rounded-lg shadow-lg hover:shadow-accent/30',
+        primary: 'bg-accent text-white hover:brightness-110 rounded-lg shadow-lg hover:shadow-accent/30',
         secondary: 'bg-surface-dark border border-border-dark text-text-primary hover:border-primary/50 hover:bg-surface-hover rounded-lg',
-        ghost: 'bg-transparent text-text-secondary hover:text-white hover:bg-white/5 rounded-lg',
+        ghost: 'bg-transparent text-text-secondary hover:text-[#2A2018] hover:bg-[#C17C64]/5 rounded-lg',
         danger: 'bg-danger text-white hover:bg-red-400 rounded-lg',
         outline: 'bg-transparent border border-primary/40 text-primary hover:bg-primary/10 rounded-lg',
-        pill: 'bg-accent text-bg-dark hover:brightness-110 rounded-full shadow-lg hover:shadow-accent/30',
+        pill: 'bg-accent text-white hover:brightness-110 rounded-full shadow-lg hover:shadow-accent/30',
     };
 
     const sizes = {

@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@vladmandic/face-api": "^1.7.15",
     "axios": "^1.13.6",
     "d3": "^7.9.0",
     "framer-motion": "^12.35.0",

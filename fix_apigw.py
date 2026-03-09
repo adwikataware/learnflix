@@ -215,6 +215,9 @@ def main():
         # Notes from upload
         ('POST', '/notes/generate',             'primelearn-episode-engine'),
 
+        # Audio narration
+        ('POST', '/audio/generate',             'primelearn-episode-engine'),
+
         # Season Finale
         ('POST', '/season-finale/generate',     'primelearn-episode-engine'),
         ('POST', '/season-finale/submit',       'primelearn-episode-engine'),

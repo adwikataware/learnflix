@@ -3,7 +3,7 @@ import axios from 'axios';
 const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
     headers: { 'Content-Type': 'application/json' },
-    timeout: 30000,
+    timeout: 120000,
 });
 
 export const getLearnerId = () => {
@@ -29,7 +29,13 @@ const handleResponse = async (request) => {
         const response = await request;
         return { data: response.data, error: null };
     } catch (error) {
-        console.error('API Error:', error.response?.data || error.message);
+        // Only log real API errors, not network/CORS failures (expected when backend not deployed)
+        const msg = error.response?.data;
+        const isNetworkIssue = error.code === 'ERR_NETWORK' || error.code === 'ERR_BAD_REQUEST'
+            || !error.response || (typeof msg === 'object' && Object.keys(msg).length === 0);
+        if (!isNetworkIssue) {
+            console.error('API Error:', msg || error.message);
+        }
         return {
             data: null,
             error: error.response?.data?.error || 'An unexpected error occurred.'
@@ -121,3 +127,11 @@ export const getUploadUrl = (file_name) =>
 
 export const generateNotesFromUpload = (data) =>
     handleResponse(api.post('/notes/generate', data));
+
+// Presentation generation (slides + Polly audio per slide) — routed via /video/generate
+export const generatePresentation = (data) =>
+    handleResponse(api.post('/video/generate', { ...data, type: 'presentation' }));
+
+// Audio narration (Polly)
+export const generateAudio = (data) =>
+    handleResponse(api.post('/audio/generate', data));

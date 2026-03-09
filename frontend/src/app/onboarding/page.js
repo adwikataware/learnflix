@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   registerUser,
@@ -27,14 +26,6 @@ const GOALS = [
   { id: 'sql', label: 'SQL & Databases', icon: 'database', desc: 'Queries, joins, optimization & design' },
 ];
 
-const EDUCATION_OPTIONS = [
-  'High School',
-  'Undergraduate',
-  'Graduate',
-  'Working Professional',
-  'Self-Learner',
-];
-
 const pageTransition = {
   initial: { opacity: 0, x: 60 },
   animate: { opacity: 1, x: 0, transition: { duration: 0.4, ease: 'easeOut' } },
@@ -56,6 +47,220 @@ function layoutPreviewNodes(nodes) {
   });
 }
 
+// ─── Smile Detector Component ───────────────────────────────────────────────
+function SmileDetector({ onSmileComplete, smileThreshold = 70 }) {
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const animRef = useRef(null);
+  const faceapiRef = useRef(null);
+  const [smilePercent, setSmilePercent] = useState(0);
+  const [peakSmile, setPeakSmile] = useState(0);
+  const [modelLoading, setModelLoading] = useState(true);
+  const [cameraError, setCameraError] = useState(null);
+  const [faceDetected, setFaceDetected] = useState(false);
+  const [smileUnlocked, setSmileUnlocked] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function init() {
+      try {
+        // Dynamic import face-api (client-only)
+        const faceapi = await import('@vladmandic/face-api');
+        faceapiRef.current = faceapi;
+
+        // Load models
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+          faceapi.nets.faceExpressionNet.loadFromUri('/models'),
+        ]);
+
+        if (cancelled) return;
+        setModelLoading(false);
+
+        // Start camera
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 480, height: 360, facingMode: 'user' },
+        });
+        if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
+
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          await videoRef.current.play();
+        }
+
+        // Detection loop
+        const detect = async () => {
+          if (cancelled || !videoRef.current || !faceapiRef.current) return;
+          const fapi = faceapiRef.current;
+
+          const result = await fapi.detectSingleFace(
+            videoRef.current,
+            new fapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 })
+          ).withFaceExpressions();
+
+          if (result) {
+            setFaceDetected(true);
+            const happy = Math.round((result.expressions.happy || 0) * 100);
+            setSmilePercent(happy);
+            setPeakSmile(prev => Math.max(prev, happy));
+
+            if (happy >= smileThreshold) {
+              setSmileUnlocked(true);
+            }
+          } else {
+            setFaceDetected(false);
+            setSmilePercent(0);
+          }
+
+          animRef.current = requestAnimationFrame(detect);
+        };
+
+        // Wait a frame for video to be ready
+        setTimeout(() => { if (!cancelled) detect(); }, 500);
+
+      } catch (err) {
+        if (!cancelled) {
+          console.error('Camera/model error:', err);
+          setCameraError(err.name === 'NotAllowedError'
+            ? 'Camera access denied. Please allow camera access and refresh.'
+            : 'Could not start camera. Please check your device.'
+          );
+        }
+      }
+    }
+
+    init();
+
+    return () => {
+      cancelled = true;
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    };
+  }, [smileThreshold]);
+
+  // Notify parent when smile unlocked
+  useEffect(() => {
+    if (smileUnlocked) onSmileComplete?.();
+  }, [smileUnlocked, onSmileComplete]);
+
+  const meterColor = smilePercent >= 70 ? '#8FA395' : smilePercent >= 40 ? '#D4A574' : '#C17C64';
+
+  if (cameraError) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-8">
+        <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 40 }}>videocam_off</span>
+        <p className="text-sm text-[#C17C64] text-center max-w-xs">{cameraError}</p>
+        <button
+          onClick={() => onSmileComplete?.()}
+          className="mt-2 px-4 py-2 rounded-lg border border-[#D8CCBE] text-[#6B5E52] text-sm hover:border-[#C17C64]/40 transition-colors"
+        >
+          Skip for now
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      {/* Camera View */}
+      <div className="relative rounded-2xl overflow-hidden border-2 border-[#D8CCBE] bg-black" style={{ width: 320, height: 240 }}>
+        {modelLoading && (
+          <div className="absolute inset-0 bg-[#FAF7F3] flex flex-col items-center justify-center z-10">
+            <div className="w-8 h-8 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin mb-3" />
+            <p className="text-xs text-[#9A8E82]">Loading face detection...</p>
+          </div>
+        )}
+
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover mirror"
+          style={{ transform: 'scaleX(-1)' }}
+          muted
+          playsInline
+        />
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" style={{ transform: 'scaleX(-1)' }} />
+
+        {/* Face detection indicator */}
+        {!modelLoading && (
+          <div className={`absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold ${
+            faceDetected ? 'bg-[#8FA395]/90 text-white' : 'bg-[#C17C64]/90 text-white'
+          }`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${faceDetected ? 'bg-white' : 'bg-white/50 animate-pulse'}`} />
+            {faceDetected ? 'Face detected' : 'No face detected'}
+          </div>
+        )}
+
+        {/* Smile unlocked overlay */}
+        {smileUnlocked && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 bg-[#8FA395]/20 flex items-center justify-center"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', damping: 10 }}
+              className="bg-white rounded-full p-3 shadow-lg"
+            >
+              <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 32, fontVariationSettings: "'FILL' 1" }}>
+                sentiment_very_satisfied
+              </span>
+            </motion.div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Smile Meter */}
+      <div className="w-80">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-xs text-[#6B5E52] font-semibold flex items-center gap-1">
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>mood</span>
+            Smile Meter
+          </span>
+          <span className="text-xs font-bold" style={{ color: meterColor }}>{smilePercent}%</span>
+        </div>
+        <div className="w-full h-4 bg-[#E2D8CC] rounded-full overflow-hidden relative">
+          <motion.div
+            className="h-full rounded-full transition-colors duration-300"
+            style={{ backgroundColor: meterColor }}
+            animate={{ width: `${smilePercent}%` }}
+            transition={{ duration: 0.15 }}
+          />
+          {/* Threshold marker */}
+          <div
+            className="absolute top-0 h-full w-0.5 bg-[#2A2018]/30"
+            style={{ left: `${smileThreshold}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between mt-1">
+          <span className="text-[9px] text-[#9A8E82]">0</span>
+          <span className="text-[9px] text-[#9A8E82]">Smile to unlock →</span>
+          <span className="text-[9px] text-[#9A8E82]">100</span>
+        </div>
+      </div>
+
+      {/* Status message */}
+      <p className="text-sm text-center">
+        {smileUnlocked ? (
+          <span className="text-[#8FA395] font-bold flex items-center gap-1 justify-center">
+            <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            Beautiful smile! You're ready to learn!
+          </span>
+        ) : faceDetected ? (
+          <span className="text-[#D4A574]">Almost there... give us a big smile!</span>
+        ) : (
+          <span className="text-[#9A8E82]">Position your face in front of the camera</span>
+        )}
+      </p>
+    </div>
+  );
+}
+
+// ─── Main Onboarding ────────────────────────────────────────────────────────
 export default function Onboarding() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -64,32 +269,37 @@ export default function Onboarding() {
 
   // Step 1 state
   const [name, setName] = useState('');
-  const [education, setEducation] = useState('');
+  const [smileCompleted, setSmileCompleted] = useState(false);
+
+  // Step 2 state
   const [selectedGoal, setSelectedGoal] = useState('');
   const [customTopic, setCustomTopic] = useState('');
 
-  // Language always English
-  const language = 'en';
-
   // Step 3 state
-  const [questions, setQuestions] = useState([]);
-  const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [answers, setAnswers] = useState([]);
-  const [selectedOption, setSelectedOption] = useState(null);
-
-  // Step 4 state
-  const [finalScore, setFinalScore] = useState(null);
-  const [assessmentResult, setAssessmentResult] = useState(null);
   const [realNodes, setRealNodes] = useState([]);
   const [realEdges, setRealEdges] = useState([]);
+  const [constellationLoading, setConstellationLoading] = useState(false);
 
-  // Steps: 1=Profile+Goal, 3=Assessment, 4=Results (step 2 skipped)
-  const progressPercent = step === 1 ? 33 : step === 3 ? 66 : 100;
+  const language = 'en';
 
-  // Step 1 -> Step 2
+  const PREVIEW_COLORS = { mastered: '#8FA395', active: '#C17C64', locked: '#9A8E82' };
+
+  const progressPercent = step === 1 ? 33 : step === 2 ? 66 : 100;
+
+  const handleSmileComplete = useCallback(() => {
+    setSmileCompleted(true);
+  }, []);
+
+  // Step 1 → Step 2
+  const handleStep1Next = () => {
+    if (!name.trim() || !smileCompleted) return;
+    setStep(2);
+  };
+
+  // Step 2 → Step 3 (Register + Set Goal + Fetch Constellation)
   const handleGoalSubmit = async () => {
     const hasGoal = selectedGoal || customTopic.trim();
-    if (!hasGoal || !name.trim()) return;
+    if (!hasGoal) return;
     setLoading(true);
     setError(null);
 
@@ -97,6 +307,7 @@ export default function Onboarding() {
       ? customTopic.trim()
       : (GOALS.find((g) => g.id === selectedGoal)?.label || selectedGoal);
 
+    // Register user
     const { data: regData, error: regErr } = await registerUser({ language });
     if (regErr) {
       setError(regErr);
@@ -106,8 +317,9 @@ export default function Onboarding() {
 
     const lId = regData.learner_id;
     setLearnerId(lId);
-    if (name.trim()) setLearnerName(name.trim());
+    setLearnerName(name.trim());
 
+    // Set goal
     const { error: goalErr } = await setGoal({ learner_id: lId, goal: goalLabel });
     if (goalErr) {
       setError(goalErr);
@@ -115,127 +327,85 @@ export default function Onboarding() {
       return;
     }
 
-    // Skip language step — go straight to assessment
-    const lId2 = lId;
-    const { data: assessData, error: fetchErr } = await getAssessment(lId2);
-    if (fetchErr) {
-      setError(fetchErr);
-      setLoading(false);
-      return;
+    // Move to constellation step
+    setStep(3);
+    setConstellationLoading(true);
+    setLoading(false);
+
+    // Silently auto-complete assessment to trigger constellation generation
+    // (Backend seeds KnowledgeGraph + LearnerMastery when assessment is submitted)
+    try {
+      const { data: assessData } = await getAssessment(lId);
+      if (assessData?.assessment?.length > 0) {
+        // Submit with "beginner" default answers (all wrong → low ability → unlocks beginner concepts)
+        const defaultAnswers = assessData.assessment.map((q, i) => ({
+          question_id: `q${i}`,
+          difficulty: q.difficulty || 0.5,
+          is_correct: false,
+        }));
+        await submitAssessment({ learner_id: lId, answers: defaultAnswers });
+      }
+    } catch (e) {
+      console.log('Auto-assessment seed:', e);
     }
 
-    setQuestions(assessData.assessment);
-    setStep(3);
-    setLoading(false);
+    // Now fetch the constellation (should have nodes after assessment seeded concepts)
+    const constRes = await getConstellation(lId);
+    if (!constRes.error && constRes.data?.nodes?.length > 0) {
+      const raw = constRes.data.nodes.map((n) => ({
+        concept_id: n.concept_id || n.id,
+        label: n.label || n.concept_id,
+        status: n.status === 'mastered' ? 'mastered' : n.status === 'active' ? 'active' : 'locked',
+      }));
+      const laid = layoutPreviewNodes(raw);
+      setRealNodes(laid);
+
+      const edges = [];
+      const apiEdges = constRes.data.edges || constRes.data.links || [];
+      apiEdges.forEach((e) => {
+        const si = laid.findIndex(n => n.concept_id === e.source);
+        const ti = laid.findIndex(n => n.concept_id === e.target);
+        if (si >= 0 && ti >= 0) edges.push([si, ti]);
+      });
+      setRealEdges(edges);
+    }
+    setConstellationLoading(false);
   };
-
-  // Step 3: Answer a question
-  const handleAnswerSubmit = async (optionIndex) => {
-    if (loading) return;
-    setSelectedOption(optionIndex);
-
-    setTimeout(async () => {
-      const currentQ = questions[currentQIndex];
-      const isCorrect = optionIndex === currentQ.correct_option_index;
-
-      const newAnswers = [
-        ...answers,
-        {
-          question_id: `q${currentQIndex}`,
-          difficulty: currentQ.difficulty || 0.5,
-          is_correct: isCorrect,
-        },
-      ];
-      setAnswers(newAnswers);
-
-      if (currentQIndex < questions.length - 1) {
-        setCurrentQIndex(currentQIndex + 1);
-        setSelectedOption(null);
-      } else {
-        setLoading(true);
-        const lId = getLearnerId();
-        const { data, error: submitErr } = await submitAssessment({
-          learner_id: lId,
-          answers: newAnswers,
-        });
-
-        if (submitErr) {
-          setError(submitErr);
-          setLoading(false);
-          return;
-        }
-
-        setFinalScore(data.ability_score * 1000);
-        setAssessmentResult(data);
-
-        // Fetch the REAL AI-generated constellation
-        const constRes = await getConstellation(lId);
-        if (!constRes.error && constRes.data?.nodes?.length > 0) {
-          const raw = constRes.data.nodes.map((n) => ({
-            concept_id: n.concept_id || n.id,
-            label: n.label || n.concept_id,
-            status: n.status === 'mastered' ? 'mastered' : n.status === 'active' ? 'active' : 'locked',
-          }));
-          const laid = layoutPreviewNodes(raw);
-          setRealNodes(laid);
-
-          // Build edges from prerequisites or links
-          const edges = [];
-          const apiEdges = constRes.data.edges || constRes.data.links || [];
-          apiEdges.forEach((e) => {
-            const si = laid.findIndex(n => n.concept_id === e.source);
-            const ti = laid.findIndex(n => n.concept_id === e.target);
-            if (si >= 0 && ti >= 0) edges.push([si, ti]);
-          });
-          setRealEdges(edges);
-        }
-
-        setStep(4);
-        setLoading(false);
-        setSelectedOption(null);
-      }
-    }, 400);
-  };
-
-  const strengths = assessmentResult?.strengths || [];
-  const gaps = assessmentResult?.gaps || [];
-
-  const PREVIEW_COLORS = { mastered: '#00d26a', active: '#00ace0', locked: '#64748b' };
 
   return (
-    <div className="min-h-screen bg-bg-dark text-text-primary flex flex-col">
+    <div className="min-h-screen bg-[#FAF7F3] text-[#2A2018] flex flex-col">
 
-      {/* Sticky Header - No sidebar, standalone */}
-      <header className="sticky top-0 z-50 glass-panel border-b border-border-dark">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-[#D8CCBE]">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-6 py-4">
-          <Link href="/" className="text-xl font-bold text-text-white">
-            Prime<span className="text-primary">Learn</span>
-          </Link>
-          <Link
-            href="/"
-            className="text-text-secondary text-sm hover:text-text-white transition-colors flex items-center gap-1"
+          <span className="text-xl font-bold text-[#2A2018] font-[Manrope]">
+            Prime<span className="text-[#C17C64]">Learn</span>
+          </span>
+          <button
+            onClick={() => router.push('/')}
+            className="text-[#9A8E82] text-sm hover:text-[#2A2018] transition-colors flex items-center gap-1"
           >
             <span className="material-symbols-outlined text-base">close</span>
-            Exit Setup
-          </Link>
+            Exit
+          </button>
         </div>
       </header>
 
       {/* Progress Bar */}
-      <div className="w-full bg-surface-dark">
+      <div className="w-full bg-white border-b border-[#E2D8CC]">
         <div className="max-w-5xl mx-auto px-6 py-3 flex items-center gap-4">
-          <span className="text-text-secondary text-xs font-semibold tracking-wider uppercase whitespace-nowrap">
-            Step {step === 1 ? 1 : step === 3 ? 2 : 3} of 3
+          <span className="text-[#9A8E82] text-xs font-semibold tracking-wider uppercase whitespace-nowrap">
+            Step {step} of 3
           </span>
-          <div className="flex-1 h-1.5 bg-border-dark rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-primary rounded-full"
+              className="h-full bg-[#C17C64] rounded-full"
               initial={{ width: '0%' }}
               animate={{ width: `${progressPercent}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
             />
           </div>
-          <span className="text-primary text-xs font-bold">{progressPercent}%</span>
+          <span className="text-[#C17C64] text-xs font-bold">{progressPercent}%</span>
         </div>
       </div>
 
@@ -243,126 +413,67 @@ export default function Onboarding() {
       <div className="flex-1 flex items-start justify-center px-6 py-10">
         <AnimatePresence mode="wait">
 
-          {/* STEP 1: Welcome & Goals */}
+          {/* ═══ STEP 1: Name + Smile Camera ═══ */}
           {step === 1 && (
-            <motion.div
-              key="step1"
-              {...pageTransition}
-              className="w-full max-w-3xl"
-            >
-              <div className="text-center mb-10">
-                <span className="material-symbols-outlined text-primary text-5xl mb-4 block">
-                  rocket_launch
-                </span>
-                <h1 className="text-4xl md:text-5xl font-bold text-text-white mb-3">
-                  Welcome to PrimeLearn
+            <motion.div key="step1" {...pageTransition} className="w-full max-w-2xl">
+
+              <div className="text-center mb-8">
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', damping: 10, delay: 0.1 }}
+                  className="material-symbols-outlined text-[#C17C64] text-5xl mb-4 block"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  sentiment_very_satisfied
+                </motion.span>
+                <h1 className="text-3xl md:text-4xl font-bold text-[#2A2018] font-[Manrope] mb-2">
+                  Start with a Smile!
                 </h1>
-                <p className="text-text-secondary text-lg">
-                  Tell us about yourself so we can personalize your learning journey.
+                <p className="text-[#6B5E52] text-base">
+                  Learning begins with a positive attitude. Tell us your name and show us your best smile!
                 </p>
               </div>
 
-              <div className="bg-surface-dark border border-border-dark rounded-2xl p-8">
-                {/* Full Name */}
-                <label className="block text-text-secondary text-sm font-semibold mb-2 uppercase tracking-wider">
-                  Full Name
+              <div className="bg-white border border-[#D8CCBE] rounded-2xl p-8 shadow-sm">
+
+                {/* Name Input */}
+                <label className="block text-[#6B5E52] text-sm font-semibold mb-2 uppercase tracking-wider">
+                  Your Name
                 </label>
                 <input
                   type="text"
                   placeholder="Enter your full name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-bg-dark border border-border-dark rounded-lg px-4 py-3 text-text-primary placeholder-text-muted focus:outline-none focus:border-primary transition-colors mb-6"
+                  className="w-full bg-[#FAF7F3] border border-[#D8CCBE] rounded-lg px-4 py-3 text-[#2A2018] placeholder-[#9A8E82] focus:outline-none focus:border-[#C17C64] transition-colors mb-6"
+                  autoFocus
                 />
 
-                {/* Education Level */}
-                <label className="block text-text-secondary text-sm font-semibold mb-2 uppercase tracking-wider">
-                  Education Level
+                {/* Smile Camera */}
+                <label className="block text-[#6B5E52] text-sm font-semibold mb-3 uppercase tracking-wider">
+                  Smile to Unlock
                 </label>
-                <select
-                  value={education}
-                  onChange={(e) => setEducation(e.target.value)}
-                  className="w-full bg-bg-dark border border-border-dark rounded-lg px-4 py-3 text-text-primary focus:outline-none focus:border-primary transition-colors mb-8 appearance-none cursor-pointer"
-                >
-                  <option value="" disabled>
-                    Select your education level
-                  </option>
-                  {EDUCATION_OPTIONS.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-
-                {/* Goal cards — curated topics */}
-                <label className="block text-text-secondary text-sm font-semibold mb-3 uppercase tracking-wider">
-                  Pick a topic or type your own
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
-                  {GOALS.map((g) => (
-                    <div
-                      key={g.id}
-                      onClick={() => { setSelectedGoal(g.id); setCustomTopic(''); }}
-                      className={`rounded-xl border p-4 cursor-pointer transition-all prime-glow-hover flex items-start gap-3 ${
-                        selectedGoal === g.id && !customTopic.trim()
-                          ? 'prime-selected'
-                          : 'border-border-dark bg-bg-dark hover:border-primary/30'
-                      }`}
-                    >
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        selectedGoal === g.id && !customTopic.trim() ? 'bg-primary/20' : 'bg-primary/10'
-                      }`}>
-                        <span className="material-symbols-outlined text-primary text-xl">
-                          {g.icon}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-text-white font-semibold text-sm truncate">{g.label}</h3>
-                        <p className="text-text-muted text-xs mt-0.5 line-clamp-2">{g.desc}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Custom topic input */}
-                <div className="relative mb-8">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex-1 h-px bg-border-dark" />
-                    <span className="text-text-muted text-xs font-semibold uppercase tracking-wider">or type anything</span>
-                    <div className="flex-1 h-px bg-border-dark" />
-                  </div>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary" style={{ fontSize: 20 }}>edit_note</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. Organic Chemistry, History of India, Stock Market Basics..."
-                      value={customTopic}
-                      onChange={(e) => { setCustomTopic(e.target.value); if (e.target.value.trim()) setSelectedGoal(''); }}
-                      className={`w-full bg-bg-dark border rounded-xl pl-12 pr-4 py-4 text-text-primary placeholder-text-muted focus:outline-none transition-all text-sm ${
-                        customTopic.trim() ? 'border-primary bg-primary/5' : 'border-border-dark focus:border-primary/50'
-                      }`}
-                    />
-                    {customTopic.trim() && (
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-primary material-symbols-outlined" style={{ fontSize: 18 }}>check_circle</span>
-                    )}
-                  </div>
-                </div>
+                <SmileDetector onSmileComplete={handleSmileComplete} smileThreshold={70} />
 
                 {error && (
-                  <p className="text-danger text-sm text-center mb-4">{error}</p>
+                  <p className="text-[#C17C64] text-sm text-center mt-4">{error}</p>
                 )}
 
                 <button
-                  onClick={handleGoalSubmit}
-                  disabled={!name.trim() || (!selectedGoal && !customTopic.trim()) || loading}
-                  className="bg-accent text-bg-dark font-bold px-8 py-4 rounded-lg text-lg hover:brightness-110 transition-all gold-glow w-full disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  onClick={handleStep1Next}
+                  disabled={!name.trim() || !smileCompleted}
+                  className="mt-6 bg-[#C17C64] text-white font-bold px-8 py-4 rounded-lg text-lg hover:brightness-110 transition-all w-full disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
                 >
-                  {loading ? (
-                    <span className="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+                  {smileCompleted ? (
+                    <>
+                      Let's Go!
+                      <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                    </>
                   ) : (
                     <>
-                      Next Step
-                      <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                      <span className="material-symbols-outlined text-xl">lock</span>
+                      Smile to Unlock
                     </>
                   )}
                 </button>
@@ -370,121 +481,161 @@ export default function Onboarding() {
             </motion.div>
           )}
 
-          {/* STEP 3: Adaptive Assessment */}
-          {step === 3 && questions.length > 0 && (
-            <motion.div
-              key={`step3-q${currentQIndex}`}
-              {...pageTransition}
-              className="w-full max-w-3xl"
-            >
-              <div className="flex justify-between items-center mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-xl">quiz</span>
-                  <span className="text-text-secondary text-xs font-semibold tracking-widest uppercase">
-                    Adaptive Assessment
-                  </span>
-                </div>
-                <span className="text-text-secondary text-sm font-semibold">
-                  {currentQIndex + 1} / {questions.length}
-                </span>
+          {/* ═══ STEP 2: Pick a Topic ═══ */}
+          {step === 2 && (
+            <motion.div key="step2" {...pageTransition} className="w-full max-w-3xl">
+
+              <div className="text-center mb-8">
+                <span className="material-symbols-outlined text-[#D4A574] text-5xl mb-4 block" style={{ fontVariationSettings: "'FILL' 1" }}>school</span>
+                <h1 className="text-3xl md:text-4xl font-bold text-[#2A2018] font-[Manrope] mb-2">
+                  What do you want to learn, {name.split(' ')[0]}?
+                </h1>
+                <p className="text-[#6B5E52] text-base">
+                  Pick a topic or type anything you're curious about.
+                </p>
               </div>
 
-              {/* Question progress */}
-              <div className="h-1 w-full bg-border-dark rounded-full mb-10 overflow-hidden">
-                <motion.div
-                  className="h-full bg-primary rounded-full"
-                  animate={{
-                    width: `${((currentQIndex + 1) / questions.length) * 100}%`,
-                  }}
-                  transition={{ duration: 0.4 }}
-                />
-              </div>
+              <div className="bg-white border border-[#D8CCBE] rounded-2xl p-8 shadow-sm">
 
-              <h2 className="text-2xl md:text-3xl text-text-white font-bold leading-relaxed mb-8">
-                {questions[currentQIndex].question}
-              </h2>
-
-              <div className="flex flex-col gap-3">
-                {questions[currentQIndex].options.map((option, idx) => {
-                  const letter = String.fromCharCode(65 + idx);
-                  const isSelected = selectedOption === idx;
-
-                  return (
-                    <motion.div
-                      key={idx}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                      onClick={() => handleAnswerSubmit(idx)}
-                      className={`group border rounded-xl p-5 cursor-pointer transition-all flex items-center gap-4 prime-glow-hover ${
-                        isSelected
-                          ? 'prime-selected'
-                          : 'border-border-dark bg-surface-dark hover:border-primary/40'
-                      } ${loading ? 'opacity-50 pointer-events-none' : ''}`}
+                {/* Goal cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                  {GOALS.map((g) => (
+                    <div
+                      key={g.id}
+                      onClick={() => { setSelectedGoal(g.id); setCustomTopic(''); }}
+                      className={`rounded-xl border p-4 cursor-pointer transition-all flex items-start gap-3 hover:shadow-sm ${
+                        selectedGoal === g.id && !customTopic.trim()
+                          ? 'border-[#C17C64] bg-[#C17C64]/5 shadow-sm'
+                          : 'border-[#D8CCBE] bg-[#FAF7F3] hover:border-[#D4A574]/40'
+                      }`}
                     >
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-colors flex-shrink-0 ${
-                          isSelected
-                            ? 'bg-primary text-bg-dark'
-                            : 'bg-bg-dark border border-border-dark text-text-secondary group-hover:border-primary group-hover:text-primary'
-                        }`}
-                      >
-                        {letter}
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                        selectedGoal === g.id && !customTopic.trim() ? 'bg-[#C17C64]/15' : 'bg-[#D4A574]/10'
+                      }`}>
+                        <span className="material-symbols-outlined text-[#C17C64] text-xl">{g.icon}</span>
                       </div>
-                      <span className="text-text-primary text-base">{option}</span>
-                    </motion.div>
-                  );
-                })}
-              </div>
+                      <div className="min-w-0">
+                        <h3 className="text-[#2A2018] font-semibold text-sm truncate">{g.label}</h3>
+                        <p className="text-[#9A8E82] text-xs mt-0.5 line-clamp-2">{g.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
 
-              {error && <p className="text-danger mt-6 text-center text-sm">{error}</p>}
+                {/* Custom topic */}
+                <div className="relative mb-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 h-px bg-[#D8CCBE]" />
+                    <span className="text-[#9A8E82] text-xs font-semibold uppercase tracking-wider">or type anything</span>
+                    <div className="flex-1 h-px bg-[#D8CCBE]" />
+                  </div>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#C17C64]" style={{ fontSize: 20 }}>edit_note</span>
+                    <input
+                      type="text"
+                      placeholder="e.g. Organic Chemistry, History of India, Stock Market Basics..."
+                      value={customTopic}
+                      onChange={(e) => { setCustomTopic(e.target.value); if (e.target.value.trim()) setSelectedGoal(''); }}
+                      className={`w-full bg-[#FAF7F3] border rounded-xl pl-12 pr-4 py-4 text-[#2A2018] placeholder-[#9A8E82] focus:outline-none transition-all text-sm ${
+                        customTopic.trim() ? 'border-[#C17C64] bg-[#C17C64]/5' : 'border-[#D8CCBE] focus:border-[#C17C64]/50'
+                      }`}
+                    />
+                    {customTopic.trim() && (
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8FA395] material-symbols-outlined" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    )}
+                  </div>
+                </div>
+
+                {error && (
+                  <p className="text-[#C17C64] text-sm text-center mb-4">{error}</p>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="px-5 py-4 rounded-lg border border-[#D8CCBE] text-[#6B5E52] font-semibold text-base hover:border-[#C17C64]/40 transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={handleGoalSubmit}
+                    disabled={(!selectedGoal && !customTopic.trim()) || loading}
+                    className="flex-1 bg-[#C17C64] text-white font-bold px-8 py-4 rounded-lg text-lg hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    {loading ? (
+                      <span className="material-symbols-outlined animate-spin text-xl">progress_activity</span>
+                    ) : (
+                      <>
+                        Generate My Constellation
+                        <span className="material-symbols-outlined text-xl">auto_awesome</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )}
 
-          {/* STEP 4: Results */}
-          {step === 4 && (
+          {/* ═══ STEP 3: Constellation + Begin Journey ═══ */}
+          {step === 3 && (
             <motion.div
-              key="step4"
+              key="step3"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
               className="w-full max-w-3xl"
             >
               <div className="text-center mb-8">
-                <span className="text-accent text-xs font-bold tracking-[0.2em] uppercase mb-3 block">
-                  Assessment Complete
-                </span>
-                <h1 className="text-4xl md:text-5xl font-bold text-text-white mb-3">
-                  Your Learning Profile
+                <motion.span
+                  initial={{ rotate: -180, scale: 0 }}
+                  animate={{ rotate: 0, scale: 1 }}
+                  transition={{ type: 'spring', damping: 10, delay: 0.2 }}
+                  className="material-symbols-outlined text-[#C17C64] text-5xl mb-4 block"
+                  style={{ fontVariationSettings: "'FILL' 1" }}
+                >
+                  hub
+                </motion.span>
+                <h1 className="text-3xl md:text-4xl font-bold text-[#2A2018] font-[Manrope] mb-2">
+                  Your Learning Constellation
                 </h1>
-                <p className="text-text-secondary max-w-md mx-auto">
-                  Based on your adaptive assessment, here is your personalized skill constellation.
+                <p className="text-[#6B5E52] max-w-md mx-auto">
+                  Here's your personalized learning map. Each node is a concept you'll master on your journey.
                 </p>
               </div>
 
-              {/* Constellation Preview — Real AI-generated nodes */}
-              <div className="bg-surface-dark border border-border-dark rounded-2xl overflow-hidden mb-8 relative">
+              {/* Constellation Preview */}
+              <div className="bg-white border border-[#D8CCBE] rounded-2xl overflow-hidden mb-6 relative">
                 <div
-                  className="absolute inset-0 pointer-events-none opacity-20"
+                  className="absolute inset-0 pointer-events-none opacity-30"
                   style={{
-                    backgroundImage: 'radial-gradient(rgba(0,172,224,0.15) 1px, transparent 1px)',
+                    backgroundImage: 'radial-gradient(rgba(193,124,100,0.08) 1px, transparent 1px)',
                     backgroundSize: '25px 25px',
                   }}
                 />
-                {realNodes.length > 0 ? (
+
+                {constellationLoading ? (
+                  <div className="flex items-center justify-center py-20">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="relative">
+                        <div className="w-16 h-16 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
+                        <span className="material-symbols-outlined text-[#C17C64] absolute inset-0 flex items-center justify-center" style={{ fontSize: 24 }}>hub</span>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[#2A2018] font-semibold text-sm">Generating your constellation...</p>
+                        <p className="text-[#9A8E82] text-xs mt-1">Our AI is mapping your learning path</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : realNodes.length > 0 ? (
                   <svg className="w-full" viewBox="0 0 700 350" preserveAspectRatio="xMidYMid meet">
                     <defs>
-                      <filter id="preview-glow-green" x="-50%" y="-50%" width="200%" height="200%">
-                        <feGaussianBlur stdDeviation="3" result="blur" />
-                        <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-                      </filter>
-                      <filter id="preview-glow-blue" x="-50%" y="-50%" width="200%" height="200%">
+                      <filter id="glow-active" x="-50%" y="-50%" width="200%" height="200%">
                         <feGaussianBlur stdDeviation="4" result="blur" />
                         <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
                       </filter>
                     </defs>
 
-                    {/* Edges from real data */}
+                    {/* Edges */}
                     {realEdges.map(([si, ti], idx) => {
                       const src = realNodes[si];
                       const tgt = realNodes[ti];
@@ -492,10 +643,10 @@ export default function Onboarding() {
                       const hasActive = src.status === 'active' || tgt.status === 'active';
                       return (
                         <motion.line
-                          key={`pe-${idx}`}
+                          key={`e-${idx}`}
                           x1={src.x} y1={src.y} x2={tgt.x} y2={tgt.y}
-                          stroke={hasActive ? 'rgba(0,172,224,0.3)' : 'rgba(0,172,224,0.08)'}
-                          strokeWidth={1.5}
+                          stroke={hasActive ? 'rgba(193,124,100,0.35)' : 'rgba(193,124,100,0.1)'}
+                          strokeWidth={hasActive ? 2 : 1.5}
                           strokeDasharray={tgt.status === 'locked' ? '4 3' : 'none'}
                           initial={{ pathLength: 0, opacity: 0 }}
                           animate={{ pathLength: 1, opacity: 1 }}
@@ -504,13 +655,12 @@ export default function Onboarding() {
                       );
                     })}
 
-                    {/* Real nodes */}
+                    {/* Nodes */}
                     {realNodes.map((node, idx) => {
                       const color = PREVIEW_COLORS[node.status];
                       const r = node.status === 'active' ? 14 : node.status === 'locked' ? 10 : 12;
-                      const glowFilter = node.status === 'active' ? 'url(#preview-glow-blue)' : 'none';
                       return (
-                        <g key={idx} className={node.status === 'locked' ? 'opacity-70' : ''}>
+                        <g key={idx} className={node.status === 'locked' ? 'opacity-60' : ''}>
                           {node.status === 'active' && (
                             <circle cx={node.x} cy={node.y} r={r + 6} fill="none" stroke={color} strokeWidth="1" opacity="0.3">
                               <animate attributeName="r" values={`${r + 4};${r + 14};${r + 4}`} dur="2.5s" repeatCount="indefinite" />
@@ -520,7 +670,7 @@ export default function Onboarding() {
                           <motion.circle
                             cx={node.x} cy={node.y} r={r}
                             fill={color}
-                            filter={glowFilter}
+                            filter={node.status === 'active' ? 'url(#glow-active)' : 'none'}
                             initial={{ scale: 0, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ type: 'spring', delay: 0.3 + idx * 0.06, stiffness: 200 }}
@@ -529,7 +679,7 @@ export default function Onboarding() {
                           <text
                             x={node.x} y={node.y + r + 18}
                             textAnchor="middle"
-                            fill={node.status === 'locked' ? '#8899aa' : '#c8d6e5'}
+                            fill={node.status === 'locked' ? '#9A8E82' : '#6B5E52'}
                             fontSize="11"
                             fontWeight="600"
                             fontFamily="Manrope, sans-serif"
@@ -543,108 +693,64 @@ export default function Onboarding() {
                 ) : (
                   <div className="flex items-center justify-center py-16">
                     <div className="flex flex-col items-center gap-3">
-                      <span className="material-symbols-outlined text-primary/30 animate-pulse" style={{ fontSize: 48 }}>hub</span>
-                      <p className="text-slate-500 text-sm">Building your personalized constellation...</p>
+                      <span className="material-symbols-outlined text-[#D8CCBE]" style={{ fontSize: 48 }}>hub</span>
+                      <p className="text-[#9A8E82] text-sm">Your constellation will appear shortly...</p>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Score + Strengths + Gaps */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                {/* Score ring */}
-                <div className="bg-surface-dark border border-border-dark rounded-2xl p-6 flex flex-col items-center justify-center">
-                  <div className="relative w-32 h-32 flex items-center justify-center mb-3">
-                    <svg className="absolute inset-0 w-full h-full -rotate-90">
-                      <circle cx="64" cy="64" r="56" fill="none" stroke="#2a3642" strokeWidth="8" />
-                      <motion.circle
-                        cx="64" cy="64" r="56"
-                        fill="none" stroke="#00ace0" strokeWidth="8"
-                        strokeDasharray={2 * Math.PI * 56}
-                        strokeDashoffset={2 * Math.PI * 56}
-                        strokeLinecap="round"
-                        animate={{
-                          strokeDashoffset: 2 * Math.PI * 56 - 2 * Math.PI * 56 * ((finalScore || 0) / 1000),
-                        }}
-                        transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
-                      />
-                    </svg>
-                    <div className="text-center">
-                      <p className="text-3xl font-bold text-text-white font-mono">{Math.round(finalScore || 0)}</p>
-                      <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest mt-0.5">Score</p>
-                    </div>
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-6 mb-6">
+                {[
+                  { color: PREVIEW_COLORS.active, label: 'Ready to Learn' },
+                  { color: PREVIEW_COLORS.mastered, label: 'Mastered' },
+                  { color: PREVIEW_COLORS.locked, label: 'Locked' },
+                ].map(l => (
+                  <div key={l.label} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: l.color }} />
+                    <span className="text-xs text-[#6B5E52]">{l.label}</span>
                   </div>
-                </div>
-
-                {/* Strengths */}
-                <div className="bg-surface-dark border border-border-dark rounded-2xl p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="material-symbols-outlined text-success text-xl">check_circle</span>
-                    <h3 className="text-text-white font-bold text-sm uppercase tracking-wider">Your Strengths</h3>
-                  </div>
-                  {strengths.length > 0 ? (
-                    <ul className="space-y-3">
-                      {strengths.map((s, i) => (
-                        <li key={i} className="text-text-secondary text-sm flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-success flex-shrink-0" />
-                          {s}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-text-muted text-sm">Your AI mentor will identify strengths as you learn.</p>
-                  )}
-                </div>
-
-                {/* Priority Gaps */}
-                <div className="bg-surface-dark border border-border-dark rounded-2xl p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="material-symbols-outlined text-accent text-xl">trending_up</span>
-                    <h3 className="text-text-white font-bold text-sm uppercase tracking-wider">Focus Areas</h3>
-                  </div>
-                  {gaps.length > 0 ? (
-                    <ul className="space-y-3">
-                      {gaps.map((g, i) => (
-                        <li key={i} className="text-text-secondary text-sm flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-                          {g}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-text-muted text-sm">Focus areas will appear based on your learning progress.</p>
-                  )}
-                </div>
+                ))}
               </div>
 
-              {/* Stats row — from real data */}
-              <div className="grid grid-cols-3 gap-3 mb-8">
-                <div className="bg-surface-dark rounded-xl border border-border-dark p-4 text-center">
-                  <span className="material-symbols-outlined text-primary text-xl mb-1 block">hub</span>
-                  <p className="text-text-white font-bold text-lg">{realNodes.filter(n => n.status === 'active').length}</p>
-                  <p className="text-text-muted text-[11px]">Unlocked</p>
+              {/* Stats */}
+              {realNodes.length > 0 && (
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div className="bg-white rounded-xl border border-[#D8CCBE] p-4 text-center">
+                    <span className="material-symbols-outlined text-[#C17C64] text-xl mb-1 block" style={{ fontVariationSettings: "'FILL' 1" }}>lock_open</span>
+                    <p className="text-[#2A2018] font-bold text-lg">{realNodes.filter(n => n.status === 'active').length}</p>
+                    <p className="text-[#9A8E82] text-[11px]">Ready Now</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-[#D8CCBE] p-4 text-center">
+                    <span className="material-symbols-outlined text-[#D4A574] text-xl mb-1 block" style={{ fontVariationSettings: "'FILL' 1" }}>insights</span>
+                    <p className="text-[#2A2018] font-bold text-lg">{realNodes.length}</p>
+                    <p className="text-[#9A8E82] text-[11px]">Total Concepts</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-[#D8CCBE] p-4 text-center">
+                    <span className="material-symbols-outlined text-[#8FA395] text-xl mb-1 block" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
+                    <p className="text-[#2A2018] font-bold text-lg">{realNodes.filter(n => n.status === 'mastered').length}</p>
+                    <p className="text-[#9A8E82] text-[11px]">Mastered</p>
+                  </div>
                 </div>
-                <div className="bg-surface-dark rounded-xl border border-border-dark p-4 text-center">
-                  <span className="material-symbols-outlined text-primary text-xl mb-1 block">insights</span>
-                  <p className="text-text-white font-bold text-lg">{realNodes.length}</p>
-                  <p className="text-text-muted text-[11px]">Total Concepts</p>
-                </div>
-                <div className="bg-surface-dark rounded-xl border border-border-dark p-4 text-center">
-                  <span className="material-symbols-outlined text-accent text-xl mb-1 block">lock_open</span>
-                  <p className="text-text-white font-bold text-lg">{realNodes.filter(n => n.status === 'locked').length}</p>
-                  <p className="text-text-muted text-[11px]">To Unlock</p>
-                </div>
-              </div>
+              )}
 
+              {/* Begin Journey Button */}
               <button
                 onClick={() => router.push('/home')}
-                className="bg-accent text-bg-dark font-bold px-8 py-4 rounded-lg text-lg hover:brightness-110 transition-all gold-glow w-full flex items-center justify-center gap-2"
+                disabled={constellationLoading}
+                className="bg-[#C17C64] text-white font-bold px-8 py-4 rounded-lg text-lg hover:brightness-110 transition-all w-full flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-xl">play_arrow</span>
-                START LEARNING
+                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>rocket_launch</span>
+                BEGIN YOUR JOURNEY
               </button>
+
+              <p className="text-center text-xs text-[#9A8E82] mt-3">
+                You can always revisit your constellation from the home page.
+              </p>
             </motion.div>
           )}
+
         </AnimatePresence>
       </div>
     </div>
