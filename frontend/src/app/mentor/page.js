@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { getHint, getLearnerId } from '@/lib/api';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { getHint, getLearnerId, getConstellation } from '@/lib/api';
 import AppLayout from '@/components/layout/AppLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import useVoiceChat from '@/lib/useVoiceChat';
@@ -21,8 +21,8 @@ function ChatMessage({ message }) {
             className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
         >
             {!isUser && (
-                <div className="size-8 rounded-full bg-[#C17C64]/15 border border-[#C17C64]/30 flex items-center justify-center shrink-0 mr-3 mt-1">
-                    <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 18 }}>psychology</span>
+                <div className="size-8 rounded-full bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center shrink-0 mr-3 mt-1">
+                    <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 18 }}>psychology</span>
                 </div>
             )}
 
@@ -30,14 +30,14 @@ function ChatMessage({ message }) {
                 <div
                     className={`rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${
                         isUser
-                            ? 'bg-[#C17C64]/10 text-[#2A2018] border border-[#C17C64]/20 rounded-br-md'
-                            : 'bg-white border-l-2 border-[#C17C64] border-t border-r border-b border-t-[#D8CCBE] border-r-[#D8CCBE] border-b-[#D8CCBE] text-[#3D3228] rounded-bl-md'
+                            ? 'bg-[#E50914]/10 text-[#E5E5E5] border border-[#E50914]/20 rounded-br-md'
+                            : 'bg-[#1E1E1E] border-l-2 border-[#E50914] border-t border-r border-b border-t-[#333333] border-r-[#333333] border-b-[#333333] text-[#E5E5E5] rounded-bl-md'
                     }`}
                 >
                     <div className="whitespace-pre-wrap">{message.content}</div>
                 </div>
                 {message.viaVoice && (
-                    <span className="text-[9px] text-[#9A8E82] ml-1 mt-0.5 inline-flex items-center gap-0.5">
+                    <span className="text-[9px] text-[#808080] ml-1 mt-0.5 inline-flex items-center gap-0.5">
                         <span className="material-symbols-outlined" style={{ fontSize: 9 }}>mic</span>
                         voice
                     </span>
@@ -57,15 +57,15 @@ function TypingIndicator() {
             exit={{ opacity: 0 }}
             className="flex items-center gap-3 mb-4"
         >
-            <div className="size-8 rounded-full bg-[#C17C64]/15 border border-[#C17C64]/30 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 18 }}>psychology</span>
+            <div className="size-8 rounded-full bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 18 }}>psychology</span>
             </div>
-            <div className="bg-white border border-[#D8CCBE] rounded-2xl rounded-bl-md px-5 py-3.5">
+            <div className="bg-[#1E1E1E] border border-[#333333] rounded-2xl rounded-bl-md px-5 py-3.5">
                 <div className="flex items-center gap-1.5">
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
-                            className="size-2 rounded-full bg-[#C17C64]"
+                            className="size-2 rounded-full bg-[#E50914]"
                             animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
                             transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                         />
@@ -80,6 +80,7 @@ function TypingIndicator() {
 
 function MentorChat() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const conceptId = searchParams.get('concept_id') || 'general';
 
     const [messages, setMessages] = useState([
@@ -92,8 +93,68 @@ function MentorChat() {
     const [loading, setLoading] = useState(false);
     const [voiceMode, setVoiceMode] = useState(false);
     const [autoSpeak, setAutoSpeak] = useState(true);
+    const [showNewTopic, setShowNewTopic] = useState(false);
+    const [newTopic, setNewTopic] = useState('');
+    const [creatingCourse, setCreatingCourse] = useState(false);
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+
+    // ── Create new course on the fly ──
+    const handleCreateCourse = async () => {
+        if (!newTopic.trim()) return;
+        setCreatingCourse(true);
+
+        const learnerId = getLearnerId();
+        if (!learnerId) { router.push('/profiles'); return; }
+
+        try {
+            const topicName = newTopic.trim();
+            const slug = topicName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+
+            // Check if this course already exists in localStorage custom courses
+            const customKey = `learnflix_custom_courses_${learnerId}`;
+            const existing = JSON.parse(localStorage.getItem(customKey) || '[]');
+            const alreadyExists = existing.find(c =>
+                c.label.toLowerCase() === topicName.toLowerCase() || c.concept_id === slug
+            );
+
+            if (alreadyExists) {
+                router.push(`/season/${alreadyExists.concept_id}`);
+                return;
+            }
+
+            // Also check the constellation
+            const { data: constData } = await getConstellation(learnerId);
+            const constMatch = (constData?.nodes || []).find(n =>
+                (n.label || '').toLowerCase().includes(topicName.toLowerCase()) ||
+                topicName.toLowerCase().includes((n.label || '').toLowerCase())
+            );
+
+            if (constMatch) {
+                router.push(`/season/${constMatch.concept_id || constMatch.id}`);
+                return;
+            }
+
+            // Create new course locally — no constellation regeneration
+            const newCourse = {
+                concept_id: slug,
+                label: topicName,
+                status: 'active',
+                mastery: 0,
+                custom: true,
+                createdAt: new Date().toISOString(),
+            };
+
+            existing.push(newCourse);
+            localStorage.setItem(customKey, JSON.stringify(existing));
+
+            // Go directly to the course page — episodes will be generated there via AI
+            router.push(`/season/${slug}`);
+        } catch (e) {
+            console.error('Create course error:', e);
+            setCreatingCourse(false);
+        }
+    };
 
     // ── Voice ───────────────────────────────────────────────────────────
     const voice = useVoiceChat({
@@ -172,15 +233,15 @@ function MentorChat() {
         <AppLayout>
             <div className="flex flex-col h-[calc(100vh-57px)]">
                 {/* ── Chat Header ── */}
-                <div className="shrink-0 px-6 lg:px-8 py-4 border-b border-[#D8CCBE] bg-white/80 backdrop-blur-sm">
+                <div className="shrink-0 px-6 lg:px-8 py-4 border-b border-[#333333] bg-[#1E1E1E]/80 backdrop-blur-sm">
                     <div className="max-w-3xl mx-auto flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="size-10 rounded-xl bg-gradient-to-br from-[#C17C64]/20 to-[#D4A574]/10 border border-[#C17C64]/30 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22 }}>psychology</span>
+                            <div className="size-10 rounded-xl bg-gradient-to-br from-[#E50914]/20 to-[#E87C03]/10 border border-[#E50914]/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 22 }}>psychology</span>
                             </div>
                             <div>
-                                <h2 className="text-[#2A2018] font-bold text-base font-[Manrope]">Socratic Mentor</h2>
-                                <p className="text-xs text-[#C17C64] font-semibold uppercase tracking-wider">
+                                <h2 className="text-[#E5E5E5] font-bold text-base font-[Manrope]">Socratic Mentor</h2>
+                                <p className="text-xs text-[#E50914] font-semibold uppercase tracking-wider">
                                     {conceptId !== 'general' ? conceptId.replace(/_/g, ' ') : 'General Mode'}
                                 </p>
                             </div>
@@ -193,8 +254,8 @@ function MentorChat() {
                                     onClick={() => setVoiceMode(!voiceMode)}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
                                         voiceMode
-                                            ? 'bg-[#C17C64]/15 text-[#C17C64] border border-[#C17C64]/30'
-                                            : 'bg-[#EDE4D8] text-[#9A8E82] border border-[#D8CCBE] hover:text-[#6B5E52]'
+                                            ? 'bg-[#E50914]/15 text-[#E50914] border border-[#E50914]/30'
+                                            : 'bg-[#EDE4D8] text-[#808080] border border-[#333333] hover:text-[#B3B3B3]'
                                     }`}
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
@@ -205,7 +266,7 @@ function MentorChat() {
                             )}
 
                             {conceptId !== 'general' && (
-                                <span className="hidden md:flex items-center gap-1.5 text-xs text-[#6B5E52] border border-[#D8CCBE] px-3 py-1.5 rounded-full bg-[#F0E7DC]">
+                                <span className="hidden md:flex items-center gap-1.5 text-xs text-[#B3B3B3] border border-[#333333] px-3 py-1.5 rounded-full bg-[#2A2A2A]">
                                     <span className="material-symbols-outlined" style={{ fontSize: 14 }}>topic</span>
                                     {conceptId.replace(/_/g, ' ')}
                                 </span>
@@ -241,7 +302,7 @@ function MentorChat() {
 
                 {/* ── Voice Mode: Orb Area ── */}
                 {voiceMode && (
-                    <div className="shrink-0 px-6 lg:px-8 py-6 bg-white/50 border-t border-[#D8CCBE]">
+                    <div className="shrink-0 px-6 lg:px-8 py-6 bg-[#1E1E1E]/50 border-t border-[#333333]">
                         <div className="max-w-3xl mx-auto flex flex-col items-center gap-4">
                             <VoiceOrb
                                 state={orbState}
@@ -255,7 +316,7 @@ function MentorChat() {
                                 <motion.p
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
-                                    className="text-sm text-[#6B5E52] text-center italic"
+                                    className="text-sm text-[#B3B3B3] text-center italic"
                                 >
                                     "{voice.transcript}"
                                 </motion.p>
@@ -267,8 +328,8 @@ function MentorChat() {
                                     onClick={() => setAutoSpeak(!autoSpeak)}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
                                         autoSpeak
-                                            ? 'bg-[#8FA395]/15 text-[#8FA395] border border-[#8FA395]/30'
-                                            : 'bg-[#EDE4D8] text-[#9A8E82] border border-[#D8CCBE]'
+                                            ? 'bg-[#46D369]/15 text-[#46D369] border border-[#46D369]/30'
+                                            : 'bg-[#EDE4D8] text-[#808080] border border-[#333333]'
                                     }`}
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 13 }}>
@@ -288,12 +349,12 @@ function MentorChat() {
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     disabled={loading}
-                                    className="flex-1 bg-[#F5EDE4] border border-[#D8CCBE] rounded-full py-3 pl-5 pr-5 text-sm text-[#2A2018] placeholder-[#9A8E82] focus:ring-1 focus:ring-[#C17C64] focus:border-[#C17C64] transition-all outline-none disabled:opacity-50"
+                                    className="flex-1 bg-[#141414] border border-[#333333] rounded-full py-3 pl-5 pr-5 text-sm text-[#E5E5E5] placeholder-[#808080] focus:ring-1 focus:ring-[#E50914] focus:border-[#E50914] transition-all outline-none disabled:opacity-50"
                                 />
                                 <button
                                     onClick={handleSend}
                                     disabled={!input.trim() || loading}
-                                    className="size-11 rounded-full bg-[#C17C64] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 shadow-[0_0_20px_rgba(193,124,100,0.2)]"
+                                    className="size-11 rounded-full bg-[#E50914] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 shadow-[0_0_20px_rgba(193,124,100,0.2)]"
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>send</span>
                                 </button>
@@ -304,7 +365,7 @@ function MentorChat() {
 
                 {/* ── Text Mode: Input Bar ── */}
                 {!voiceMode && (
-                    <div className="shrink-0 px-6 lg:px-8 py-4 bg-white border-t border-[#D8CCBE]">
+                    <div className="shrink-0 px-6 lg:px-8 py-4 bg-[#1E1E1E] border-t border-[#333333]">
                         <div className="max-w-3xl mx-auto">
                             <div className="flex items-center gap-3">
                                 <div className="flex-1 relative">
@@ -316,7 +377,7 @@ function MentorChat() {
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         disabled={loading}
-                                        className="w-full bg-[#F5EDE4] border border-[#D8CCBE] rounded-full py-3.5 pl-5 pr-14 text-sm text-[#2A2018] placeholder-[#9A8E82] focus:ring-1 focus:ring-[#C17C64] focus:border-[#C17C64] transition-all outline-none disabled:opacity-50"
+                                        className="w-full bg-[#141414] border border-[#333333] rounded-full py-3.5 pl-5 pr-14 text-sm text-[#E5E5E5] placeholder-[#808080] focus:ring-1 focus:ring-[#E50914] focus:border-[#E50914] transition-all outline-none disabled:opacity-50"
                                     />
                                 </div>
                                 {/* Mic button in text mode */}
@@ -328,8 +389,8 @@ function MentorChat() {
                                         }}
                                         className={`size-12 rounded-full flex items-center justify-center shrink-0 transition-all ${
                                             voice.isListening
-                                                ? 'bg-[#D4A574] text-white animate-pulse shadow-[0_0_20px_rgba(212,165,116,0.4)]'
-                                                : 'bg-[#EDE4D8] text-[#9A8E82] hover:text-[#C17C64] hover:bg-[#C17C64]/10 border border-[#D8CCBE]'
+                                                ? 'bg-[#E87C03] text-white animate-pulse shadow-[0_0_20px_rgba(212,165,116,0.4)]'
+                                                : 'bg-[#EDE4D8] text-[#808080] hover:text-[#E50914] hover:bg-[#E50914]/10 border border-[#333333]'
                                         }`}
                                         title={voice.isListening ? 'Stop listening' : 'Voice input'}
                                     >
@@ -341,15 +402,15 @@ function MentorChat() {
                                 <button
                                     onClick={handleSend}
                                     disabled={!input.trim() || loading}
-                                    className="size-12 rounded-full bg-[#C17C64] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(193,124,100,0.2)]"
+                                    className="size-12 rounded-full bg-[#E50914] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(193,124,100,0.2)]"
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 20 }}>send</span>
                                 </button>
                             </div>
 
                             {/* Quick actions */}
-                            <div className="flex items-center gap-2 mt-3">
-                                <span className="text-[10px] text-[#9A8E82] uppercase tracking-wider">Quick:</span>
+                            <div className="flex items-center gap-2 mt-3 flex-wrap">
+                                <span className="text-[10px] text-[#808080] uppercase tracking-wider">Quick:</span>
                                 {[
                                     'Explain this concept',
                                     'Give me an analogy',
@@ -358,15 +419,83 @@ function MentorChat() {
                                     <button
                                         key={q}
                                         onClick={() => { setInput(q); inputRef.current?.focus(); }}
-                                        className="text-xs text-[#6B5E52] hover:text-[#C17C64] border border-[#D8CCBE] hover:border-[#C17C64]/30 px-3 py-1 rounded-full transition-colors bg-[#F5EDE4]"
+                                        className="text-xs text-[#B3B3B3] hover:text-[#E50914] border border-[#333333] hover:border-[#E50914]/30 px-3 py-1 rounded-full transition-colors bg-[#141414]"
                                     >
                                         {q}
                                     </button>
                                 ))}
+
+                                {/* Learn New Topic button */}
+                                <button
+                                    onClick={() => setShowNewTopic(true)}
+                                    className="text-xs text-[#46D369] hover:text-[#46D369] border border-[#46D369]/30 hover:border-[#46D369]/60 hover:bg-[#46D369]/10 px-3 py-1 rounded-full transition-all bg-[#46D369]/5 flex items-center gap-1 font-bold"
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>add_circle</span>
+                                    Learn New Topic
+                                </button>
                             </div>
                         </div>
                     </div>
                 )}
+
+                {/* ═══ Learn New Topic Modal ═══ */}
+                <AnimatePresence>
+                    {showNewTopic && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+                            onClick={() => !creatingCourse && setShowNewTopic(false)}>
+                            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
+                                className="bg-[#1A1A1A] border border-[#333] rounded-2xl p-6 max-w-md w-full mx-4"
+                                onClick={(e) => e.stopPropagation()}>
+
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="size-10 rounded-lg bg-[#46D369]/15 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-[#46D369]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>explore</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-white font-bold text-lg">Learn Something New</h3>
+                                        <p className="text-[#808080] text-xs">Type any topic — AI will create a course for you</p>
+                                    </div>
+                                </div>
+
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Operating Systems, Cooking, Stock Market, Guitar..."
+                                    value={newTopic}
+                                    onChange={(e) => setNewTopic(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleCreateCourse()}
+                                    disabled={creatingCourse}
+                                    autoFocus
+                                    className="w-full bg-[#0A0A0A] border border-[#333] rounded-xl px-4 py-3.5 text-white placeholder-[#555] focus:outline-none focus:border-[#46D369]/50 transition-colors mb-4"
+                                />
+
+                                {creatingCourse ? (
+                                    <div className="flex items-center justify-center gap-3 py-3">
+                                        <div className="w-5 h-5 border-2 border-[#46D369] border-t-transparent rounded-full animate-spin" />
+                                        <span className="text-[#46D369] text-sm font-semibold">Creating your course...</span>
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setShowNewTopic(false)}
+                                            className="flex-1 py-3 rounded-xl border border-[#333] text-[#808080] font-semibold hover:bg-white/5 transition-all">
+                                            Cancel
+                                        </button>
+                                        <button onClick={handleCreateCourse}
+                                            disabled={!newTopic.trim()}
+                                            className="flex-1 py-3 rounded-xl bg-[#46D369] text-black font-bold hover:brightness-110 transition-all disabled:opacity-30 flex items-center justify-center gap-2">
+                                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>rocket_launch</span>
+                                            Create Course
+                                        </button>
+                                    </div>
+                                )}
+
+                                <p className="text-[#555] text-[10px] text-center mt-3">
+                                    The AI will generate a full course with episodes, notes, and assessments.
+                                </p>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </AppLayout>
     );
@@ -378,7 +507,7 @@ export default function MentorPage() {
     return (
         <Suspense fallback={
             <div className="flex items-center justify-center min-h-screen">
-                <div className="size-10 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
+                <div className="size-10 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
             </div>
         }>
             <MentorChat />

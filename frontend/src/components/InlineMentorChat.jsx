@@ -19,23 +19,23 @@ function ChatBubble({ message }) {
             className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-3`}
         >
             {!isUser && (
-                <div className="size-6 rounded-full bg-[#C17C64]/15 border border-[#C17C64]/30 flex items-center justify-center shrink-0 mr-2 mt-1">
-                    <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 14 }}>psychology</span>
+                <div className="size-6 rounded-full bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center shrink-0 mr-2 mt-1">
+                    <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 14 }}>psychology</span>
                 </div>
             )}
             <div className={`max-w-[85%]`}>
                 <div
                     className={`rounded-xl px-3.5 py-2.5 text-[12px] leading-relaxed ${
                         isUser
-                            ? 'bg-[#C17C64]/10 text-[#2A2018] border border-[#C17C64]/20 rounded-br-sm'
-                            : 'bg-white border border-[#D8CCBE] border-l-2 border-l-[#C17C64] text-[#3D3228] rounded-bl-sm'
+                            ? 'bg-[#E50914]/10 text-[#E5E5E5] border border-[#E50914]/20 rounded-br-sm'
+                            : 'bg-[#1E1E1E] border border-[#333333] border-l-2 border-l-[#E50914] text-[#E5E5E5] rounded-bl-sm'
                     }`}
                 >
                     <div className="whitespace-pre-wrap">{message.content}</div>
                 </div>
                 {/* Voice indicator */}
                 {message.viaVoice && (
-                    <span className="text-[8px] text-[#9A8E82] ml-1 mt-0.5 inline-flex items-center gap-0.5">
+                    <span className="text-[8px] text-[#808080] ml-1 mt-0.5 inline-flex items-center gap-0.5">
                         <span className="material-symbols-outlined" style={{ fontSize: 8 }}>mic</span>
                         voice
                     </span>
@@ -50,15 +50,15 @@ function ChatBubble({ message }) {
 function TypingDots() {
     return (
         <div className="flex items-center gap-2 mb-3">
-            <div className="size-6 rounded-full bg-[#C17C64]/15 border border-[#C17C64]/30 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 14 }}>psychology</span>
+            <div className="size-6 rounded-full bg-[#E50914]/15 border border-[#E50914]/30 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 14 }}>psychology</span>
             </div>
-            <div className="bg-white border border-[#D8CCBE] rounded-xl rounded-bl-sm px-3.5 py-2.5">
+            <div className="bg-[#1E1E1E] border border-[#333333] rounded-xl rounded-bl-sm px-3.5 py-2.5">
                 <div className="flex items-center gap-1">
                     {[0, 1, 2].map((i) => (
                         <motion.div
                             key={i}
-                            className="size-1.5 rounded-full bg-[#C17C64]"
+                            className="size-1.5 rounded-full bg-[#E50914]"
                             animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
                             transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                         />
@@ -93,7 +93,7 @@ export default function InlineMentorChat({
     const prevConceptRef = useRef(null);
 
     const isStruggling = ['struggling', 'frustrated', 'giving_up'].includes(zone);
-    const zoneColor = zoneMeta?.color || '#C17C64';
+    const zoneColor = zoneMeta?.color || '#E50914';
 
     // ── Voice Chat Hook ─────────────────────────────────────────────────
     const voice = useVoiceChat({
@@ -233,8 +233,8 @@ export default function InlineMentorChat({
                         width: 380,
                         height: minimized ? 52 : voiceMode ? 580 : 520,
                         maxHeight: 'calc(100vh - 80px)',
-                        backgroundColor: '#F5EDE4',
-                        borderColor: '#D8CCBE',
+                        backgroundColor: '#141414',
+                        borderColor: '#333333',
                         boxShadow: '-4px -4px 40px rgba(42,32,24,0.15)',
                         transition: 'height 0.3s ease',
                     }}
@@ -242,16 +242,16 @@ export default function InlineMentorChat({
                     {/* ── Header ── */}
                     <div
                         className="flex items-center justify-between px-4 py-2.5 border-b cursor-pointer select-none"
-                        style={{ borderColor: '#D8CCBE', background: `linear-gradient(135deg, ${zoneColor}08, transparent)` }}
+                        style={{ borderColor: '#333333', background: `linear-gradient(135deg, ${zoneColor}08, transparent)` }}
                         onClick={() => setMinimized(!minimized)}
                     >
                         <div className="flex items-center gap-2.5">
-                            <div className="size-8 rounded-lg bg-gradient-to-br from-[#C17C64]/20 to-[#D4A574]/10 border border-[#C17C64]/30 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>psychology</span>
+                            <div className="size-8 rounded-lg bg-gradient-to-br from-[#E50914]/20 to-[#E87C03]/10 border border-[#E50914]/30 flex items-center justify-center">
+                                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>psychology</span>
                             </div>
                             <div>
                                 <div className="flex items-center gap-1.5">
-                                    <span className="text-sm font-bold text-[#2A2018]">Socratic Mentor</span>
+                                    <span className="text-sm font-bold text-[#E5E5E5]">Socratic Mentor</span>
                                     {isStruggling && (
                                         <span className="relative flex size-2">
                                             <span className="absolute inset-0 rounded-full animate-ping" style={{ backgroundColor: zoneColor, opacity: 0.5 }} />
@@ -269,7 +269,7 @@ export default function InlineMentorChat({
                             {voice.supported && (
                                 <button
                                     onClick={(e) => { e.stopPropagation(); setVoiceMode(!voiceMode); }}
-                                    className={`p-1 rounded-md transition-all ${voiceMode ? 'bg-[#C17C64]/15 text-[#C17C64]' : 'text-[#9A8E82] hover:text-[#2A2018]'}`}
+                                    className={`p-1 rounded-md transition-all ${voiceMode ? 'bg-[#E50914]/15 text-[#E50914]' : 'text-[#808080] hover:text-[#E5E5E5]'}`}
                                     title={voiceMode ? 'Switch to text' : 'Switch to voice'}
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
@@ -279,7 +279,7 @@ export default function InlineMentorChat({
                             )}
                             <button
                                 onClick={(e) => { e.stopPropagation(); setMinimized(!minimized); }}
-                                className="text-[#9A8E82] hover:text-[#2A2018] transition-colors p-1"
+                                className="text-[#808080] hover:text-[#E5E5E5] transition-colors p-1"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
                                     {minimized ? 'expand_less' : 'expand_more'}
@@ -287,7 +287,7 @@ export default function InlineMentorChat({
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); voice.stopSpeaking(); voice.stopListening(); onClose(); }}
-                                className="text-[#9A8E82] hover:text-[#2A2018] transition-colors p-1"
+                                className="text-[#808080] hover:text-[#E5E5E5] transition-colors p-1"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
                             </button>
@@ -302,13 +302,13 @@ export default function InlineMentorChat({
                                     initial={{ height: 0, opacity: 0 }}
                                     animate={{ height: 'auto', opacity: 1 }}
                                     className="px-4 py-2 border-b flex items-center gap-2"
-                                    style={{ borderColor: '#E2D8CC', backgroundColor: `${zoneColor}08` }}
+                                    style={{ borderColor: '#2E2E2E', backgroundColor: `${zoneColor}08` }}
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 14, color: zoneColor }}>{zoneMeta.icon || 'warning'}</span>
                                     <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: zoneColor }}>
                                         {zoneMeta.label || zone} · Score {score}/100
                                     </span>
-                                    <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden ml-2">
+                                    <div className="flex-1 h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden ml-2">
                                         <div className="h-full rounded-full" style={{ backgroundColor: zoneColor, width: `${Math.min(score, 100)}%` }} />
                                     </div>
                                 </motion.div>
@@ -338,12 +338,12 @@ export default function InlineMentorChat({
 
                             {/* ── Quick Prompts ── */}
                             {messages.length <= 2 && !voiceMode && (
-                                <div className="px-4 py-2 border-t flex flex-wrap gap-1.5" style={{ borderColor: '#E2D8CC' }}>
+                                <div className="px-4 py-2 border-t flex flex-wrap gap-1.5" style={{ borderColor: '#2E2E2E' }}>
                                     {quickPrompts.map((q) => (
                                         <button
                                             key={q}
                                             onClick={() => handleSend(q)}
-                                            className="text-[10px] text-[#6B5E52] hover:text-[#C17C64] border border-[#D8CCBE] hover:border-[#C17C64]/30 px-2.5 py-1 rounded-full transition-colors bg-white/50"
+                                            className="text-[10px] text-[#B3B3B3] hover:text-[#E50914] border border-[#333333] hover:border-[#E50914]/30 px-2.5 py-1 rounded-full transition-colors bg-[#1E1E1E]/50"
                                         >
                                             {q}
                                         </button>
@@ -353,7 +353,7 @@ export default function InlineMentorChat({
 
                             {/* ── Voice Mode: Orb Interface ── */}
                             {voiceMode && (
-                                <div className="px-3 py-4 border-t flex flex-col items-center gap-3" style={{ borderColor: '#D8CCBE', backgroundColor: 'rgba(255,255,255,0.3)' }}>
+                                <div className="px-3 py-4 border-t flex flex-col items-center gap-3" style={{ borderColor: '#333333', backgroundColor: 'rgba(255,255,255,0.3)' }}>
                                     {/* Voice Orb */}
                                     <VoiceOrb
                                         state={orbState}
@@ -367,7 +367,7 @@ export default function InlineMentorChat({
                                         <motion.p
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
-                                            className="text-xs text-[#6B5E52] text-center px-4 italic mt-1"
+                                            className="text-xs text-[#B3B3B3] text-center px-4 italic mt-1"
                                         >
                                             "{voice.transcript}"
                                         </motion.p>
@@ -379,8 +379,8 @@ export default function InlineMentorChat({
                                             onClick={() => setAutoSpeak(!autoSpeak)}
                                             className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all ${
                                                 autoSpeak
-                                                    ? 'bg-[#8FA395]/15 text-[#8FA395] border border-[#8FA395]/30'
-                                                    : 'bg-[#EDE4D8] text-[#9A8E82] border border-[#D8CCBE]'
+                                                    ? 'bg-[#46D369]/15 text-[#46D369] border border-[#46D369]/30'
+                                                    : 'bg-[#EDE4D8] text-[#808080] border border-[#333333]'
                                             }`}
                                         >
                                             <span className="material-symbols-outlined" style={{ fontSize: 11 }}>
@@ -400,12 +400,12 @@ export default function InlineMentorChat({
                                             onChange={(e) => setInput(e.target.value)}
                                             onKeyDown={handleKeyDown}
                                             disabled={loading}
-                                            className="flex-1 bg-[#F5EDE4] border border-[#D8CCBE] rounded-full py-2 pl-3 pr-3 text-[11px] text-[#2A2018] placeholder-[#9A8E82] focus:ring-1 focus:ring-[#C17C64] focus:border-[#C17C64] transition-all outline-none disabled:opacity-50"
+                                            className="flex-1 bg-[#141414] border border-[#333333] rounded-full py-2 pl-3 pr-3 text-[11px] text-[#E5E5E5] placeholder-[#808080] focus:ring-1 focus:ring-[#E50914] focus:border-[#E50914] transition-all outline-none disabled:opacity-50"
                                         />
                                         <button
                                             onClick={() => handleSend()}
                                             disabled={!input.trim() || loading}
-                                            className="size-8 rounded-full bg-[#C17C64] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 shadow-[0_0_12px_rgba(193,124,100,0.2)]"
+                                            className="size-8 rounded-full bg-[#E50914] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 shadow-[0_0_12px_rgba(193,124,100,0.2)]"
                                         >
                                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>send</span>
                                         </button>
@@ -415,7 +415,7 @@ export default function InlineMentorChat({
 
                             {/* ── Text Mode: Input Bar ── */}
                             {!voiceMode && (
-                                <div className="px-3 py-3 border-t bg-white/50" style={{ borderColor: '#D8CCBE' }}>
+                                <div className="px-3 py-3 border-t bg-[#1E1E1E]/50" style={{ borderColor: '#333333' }}>
                                     <div className="flex items-center gap-2">
                                         <input
                                             ref={inputRef}
@@ -425,7 +425,7 @@ export default function InlineMentorChat({
                                             onChange={(e) => setInput(e.target.value)}
                                             onKeyDown={handleKeyDown}
                                             disabled={loading}
-                                            className="flex-1 bg-[#F5EDE4] border border-[#D8CCBE] rounded-full py-2.5 pl-4 pr-4 text-xs text-[#2A2018] placeholder-[#9A8E82] focus:ring-1 focus:ring-[#C17C64] focus:border-[#C17C64] transition-all outline-none disabled:opacity-50"
+                                            className="flex-1 bg-[#141414] border border-[#333333] rounded-full py-2.5 pl-4 pr-4 text-xs text-[#E5E5E5] placeholder-[#808080] focus:ring-1 focus:ring-[#E50914] focus:border-[#E50914] transition-all outline-none disabled:opacity-50"
                                         />
                                         {/* Mic button in text mode */}
                                         {voice.supported && (
@@ -439,8 +439,8 @@ export default function InlineMentorChat({
                                                 }}
                                                 className={`size-9 rounded-full flex items-center justify-center shrink-0 transition-all ${
                                                     voice.isListening
-                                                        ? 'bg-[#D4A574] text-white animate-pulse shadow-[0_0_15px_rgba(212,165,116,0.4)]'
-                                                        : 'bg-[#EDE4D8] text-[#9A8E82] hover:text-[#C17C64] hover:bg-[#C17C64]/10'
+                                                        ? 'bg-[#E87C03] text-white animate-pulse shadow-[0_0_15px_rgba(212,165,116,0.4)]'
+                                                        : 'bg-[#EDE4D8] text-[#808080] hover:text-[#E50914] hover:bg-[#E50914]/10'
                                                 }`}
                                                 title={voice.isListening ? 'Stop listening' : 'Voice input'}
                                             >
@@ -452,7 +452,7 @@ export default function InlineMentorChat({
                                         <button
                                             onClick={() => handleSend()}
                                             disabled={!input.trim() || loading}
-                                            className="size-9 rounded-full bg-[#C17C64] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 shadow-[0_0_15px_rgba(193,124,100,0.2)]"
+                                            className="size-9 rounded-full bg-[#E50914] text-white flex items-center justify-center shrink-0 hover:brightness-110 transition-all disabled:opacity-40 shadow-[0_0_15px_rgba(193,124,100,0.2)]"
                                         >
                                             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>send</span>
                                         </button>

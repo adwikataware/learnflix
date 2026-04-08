@@ -26,7 +26,7 @@ function AnimatedNumber({ value, duration = 1.5, delay = 0 }) {
 
 // ─── Confetti particle ──────────────────────────────────────────────────────
 function Confetti() {
-    const colors = ['#C17C64', '#8FA395', '#D4A574', '#F5EDE4', '#6B5E52', '#e8b4b8', '#a8d5ba'];
+    const colors = ['#E50914', '#46D369', '#E87C03', '#141414', '#B3B3B3', '#e8b4b8', '#a8d5ba'];
     const particles = Array.from({ length: 60 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
@@ -60,7 +60,7 @@ function Confetti() {
 }
 
 // ─── Radial progress ring ───────────────────────────────────────────────────
-function ProgressRing({ value, size = 160, strokeWidth = 10, color = '#8FA395', label, delay = 0 }) {
+function ProgressRing({ value, size = 160, strokeWidth = 10, color = '#46D369', label, delay = 0 }) {
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const center = size / 2;
@@ -68,7 +68,7 @@ function ProgressRing({ value, size = 160, strokeWidth = 10, color = '#8FA395', 
     return (
         <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
             <svg width={size} height={size} className="-rotate-90">
-                <circle cx={center} cy={center} r={radius} fill="none" stroke="#E2D8CC" strokeWidth={strokeWidth} />
+                <circle cx={center} cy={center} r={radius} fill="none" stroke="#2E2E2E" strokeWidth={strokeWidth} />
                 <motion.circle
                     cx={center} cy={center} r={radius} fill="none" stroke={color}
                     strokeWidth={strokeWidth} strokeLinecap="round"
@@ -79,10 +79,10 @@ function ProgressRing({ value, size = 160, strokeWidth = 10, color = '#8FA395', 
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-3xl font-extrabold text-[#2A2018] font-[Manrope]">
+                <span className="text-3xl font-extrabold text-[#E5E5E5] font-[Manrope]">
                     <AnimatedNumber value={value} delay={delay} />%
                 </span>
-                {label && <span className="text-[9px] uppercase tracking-[0.15em] text-[#9A8E82] font-bold mt-1">{label}</span>}
+                {label && <span className="text-[9px] uppercase tracking-[0.15em] text-[#808080] font-bold mt-1">{label}</span>}
             </div>
         </div>
     );
@@ -96,14 +96,14 @@ function BadgeCard({ icon, title, subtitle, color, delay }) {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 200, delay }}
             whileHover={{ scale: 1.05, y: -4 }}
-            className="bg-white rounded-2xl border border-[#D8CCBE] p-5 flex flex-col items-center gap-3 text-center"
+            className="bg-[#1E1E1E] rounded-2xl border border-[#333333] p-5 flex flex-col items-center gap-3 text-center"
         >
             <div className="size-14 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${color}15` }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 28, color, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
             </div>
             <div>
-                <h4 className="text-sm font-bold text-[#2A2018]">{title}</h4>
-                <p className="text-[10px] text-[#9A8E82] mt-0.5">{subtitle}</p>
+                <h4 className="text-sm font-bold text-[#E5E5E5]">{title}</h4>
+                <p className="text-[10px] text-[#808080] mt-0.5">{subtitle}</p>
             </div>
         </motion.div>
     );
@@ -144,17 +144,17 @@ function RecommendationCard({ title, description, icon, color, onClick, delay })
             transition={{ delay, duration: 0.5 }}
             whileHover={{ y: -4, scale: 1.02 }}
             onClick={onClick}
-            className="w-full text-left bg-white rounded-xl border border-[#D8CCBE] p-5 hover:border-[#C17C64]/40 transition-all group"
+            className="w-full text-left bg-[#1E1E1E] rounded-xl border border-[#333333] p-5 hover:border-[#E50914]/40 transition-all group"
         >
             <div className="flex items-start gap-4">
                 <div className="size-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}12` }}>
                     <span className="material-symbols-outlined" style={{ fontSize: 22, color, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-bold text-[#2A2018] group-hover:text-[#C17C64] transition-colors">{title}</h4>
-                    <p className="text-xs text-[#9A8E82] mt-1 leading-relaxed">{description}</p>
+                    <h4 className="text-sm font-bold text-[#E5E5E5] group-hover:text-[#E50914] transition-colors">{title}</h4>
+                    <p className="text-xs text-[#808080] mt-1 leading-relaxed">{description}</p>
                 </div>
-                <span className="material-symbols-outlined text-[#D8CCBE] group-hover:text-[#C17C64] transition-colors mt-1" style={{ fontSize: 18 }}>arrow_forward</span>
+                <span className="material-symbols-outlined text-[#333333] group-hover:text-[#E50914] transition-colors mt-1" style={{ fontSize: 18 }}>arrow_forward</span>
             </div>
         </motion.button>
     );
@@ -251,27 +251,27 @@ function SeasonFinale() {
 
     // Generate badges
     const badges = [
-        { icon: 'school', title: 'Season Complete', subtitle: `Finished ${episodes.length} episodes`, color: '#8FA395' },
-        ...(avgMastery >= 85 ? [{ icon: 'workspace_premium', title: 'High Achiever', subtitle: `${avgMastery}% average mastery`, color: '#D4A574' }] : []),
-        ...(perfectCount >= 3 ? [{ icon: 'diamond', title: 'Perfectionist', subtitle: `${perfectCount} episodes at 90%+`, color: '#C17C64' }] : []),
-        ...(stats.streak >= 3 ? [{ icon: 'local_fire_department', title: 'On Fire', subtitle: `${stats.streak} day streak`, color: '#C17C64' }] : []),
-        { icon: 'emoji_events', title: `Level ${stats.level}`, subtitle: `${stats.xp} XP total`, color: '#6B5E52' },
-        ...(episodes.length >= 5 ? [{ icon: 'military_tech', title: 'Dedicated Learner', subtitle: '5+ episodes completed', color: '#8FA395' }] : []),
+        { icon: 'school', title: 'Season Complete', subtitle: `Finished ${episodes.length} episodes`, color: '#46D369' },
+        ...(avgMastery >= 85 ? [{ icon: 'workspace_premium', title: 'High Achiever', subtitle: `${avgMastery}% average mastery`, color: '#E87C03' }] : []),
+        ...(perfectCount >= 3 ? [{ icon: 'diamond', title: 'Perfectionist', subtitle: `${perfectCount} episodes at 90%+`, color: '#E50914' }] : []),
+        ...(stats.streak >= 3 ? [{ icon: 'local_fire_department', title: 'On Fire', subtitle: `${stats.streak} day streak`, color: '#E50914' }] : []),
+        { icon: 'emoji_events', title: `Level ${stats.level}`, subtitle: `${stats.xp} XP total`, color: '#B3B3B3' },
+        ...(episodes.length >= 5 ? [{ icon: 'military_tech', title: 'Dedicated Learner', subtitle: '5+ episodes completed', color: '#46D369' }] : []),
     ];
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F5EDE4] flex items-center justify-center">
+            <div className="min-h-screen bg-[#141414] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="size-12 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
-                    <p className="text-[#6B5E52] text-sm">Preparing your season recap...</p>
+                    <div className="size-12 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-[#B3B3B3] text-sm">Preparing your season recap...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#F5EDE4] overflow-x-hidden">
+        <div className="min-h-screen bg-[#141414] overflow-x-hidden">
             {showConfetti && <Confetti />}
 
             {/* ═══════════════════════════════════════════════════════════════════
@@ -285,7 +285,7 @@ function SeasonFinale() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 1 }}
                 >
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#2A2018] via-[#3D3228] to-[#1a1410]" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#141414] via-[#1A1A1A] to-[#0A0A0A]" />
                     {/* Animated glow orbs */}
                     <motion.div
                         className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full"
@@ -309,7 +309,7 @@ function SeasonFinale() {
                         transition={{ type: 'spring', stiffness: 150, delay: 0.3 }}
                         className="mb-6"
                     >
-                        <div className="size-24 rounded-full bg-gradient-to-br from-[#D4A574] to-[#C17C64] flex items-center justify-center mx-auto shadow-[0_0_60px_rgba(212,165,116,0.3)]">
+                        <div className="size-24 rounded-full bg-gradient-to-br from-[#E87C03] to-[#E50914] flex items-center justify-center mx-auto shadow-[0_0_60px_rgba(212,165,116,0.3)]">
                             <motion.span
                                 className="material-symbols-outlined text-white"
                                 style={{ fontSize: 48, fontVariationSettings: "'FILL' 1" }}
@@ -322,12 +322,12 @@ function SeasonFinale() {
                     </motion.div>
 
                     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                        <p className="text-[#D4A574] text-sm font-bold uppercase tracking-[0.3em] mb-3">Season Complete</p>
+                        <p className="text-[#E87C03] text-sm font-bold uppercase tracking-[0.3em] mb-3">Season Complete</p>
                         <h1 className="text-3xl lg:text-5xl font-extrabold text-white font-[Manrope] mb-4 leading-tight">
                             {season?.title || 'Season'}
                         </h1>
-                        <p className="text-[#9A8E82] text-base max-w-lg mx-auto leading-relaxed">
-                            Congratulations, <span className="text-[#D4A574] font-semibold">{learnerName.split(' ')[0] || 'Learner'}</span>!
+                        <p className="text-[#808080] text-base max-w-lg mx-auto leading-relaxed">
+                            Congratulations, <span className="text-[#E87C03] font-semibold">{learnerName.split(' ')[0] || 'Learner'}</span>!
                             You've completed all {episodes.length} episodes. Here's your journey recap.
                         </p>
                     </motion.div>
@@ -352,13 +352,13 @@ function SeasonFinale() {
                                 transition={{ type: 'spring', delay: 0.8 + i * 0.1 }}
                                 className="flex flex-col items-center"
                             >
-                                <div className="size-12 rounded-xl bg-white/5 flex items-center justify-center mb-2">
-                                    <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>{stat.icon}</span>
+                                <div className="size-12 rounded-xl bg-[#1E1E1E]/5 flex items-center justify-center mb-2">
+                                    <span className="material-symbols-outlined text-[#E87C03]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>{stat.icon}</span>
                                 </div>
                                 <span className="text-2xl font-extrabold text-white font-[Manrope]">
                                     <AnimatedNumber value={stat.value} delay={0.8 + i * 0.1} />{stat.suffix || ''}
                                 </span>
-                                <span className="text-[9px] uppercase tracking-[0.15em] text-[#9A8E82] font-bold mt-0.5">{stat.label}</span>
+                                <span className="text-[9px] uppercase tracking-[0.15em] text-[#808080] font-bold mt-0.5">{stat.label}</span>
                             </motion.div>
                         ))}
                     </motion.div>
@@ -368,7 +368,7 @@ function SeasonFinale() {
             {/* ═══════════════════════════════════════════════════════════════════
                 SECTION TABS
             ═══════════════════════════════════════════════════════════════════ */}
-            <div className="sticky top-0 z-30 bg-[#F5EDE4]/95 backdrop-blur-sm border-b border-[#D8CCBE]">
+            <div className="sticky top-0 z-30 bg-[#141414]/95 backdrop-blur-sm border-b border-[#333333]">
                 <div className="max-w-4xl mx-auto px-6">
                     <div className="flex gap-1 overflow-x-auto hide-scrollbar">
                         {[
@@ -381,13 +381,13 @@ function SeasonFinale() {
                                 key={tab.id}
                                 onClick={() => setActiveSection(tab.id)}
                                 className={`flex items-center gap-2 px-5 py-3.5 text-sm font-semibold transition-all relative whitespace-nowrap ${
-                                    activeSection === tab.id ? 'text-[#2A2018]' : 'text-[#9A8E82] hover:text-[#3D3228]'
+                                    activeSection === tab.id ? 'text-[#E5E5E5]' : 'text-[#808080] hover:text-[#E5E5E5]'
                                 }`}
                             >
-                                <span className="material-symbols-outlined" style={{ fontSize: 18, color: activeSection === tab.id ? '#C17C64' : undefined }}>{tab.icon}</span>
+                                <span className="material-symbols-outlined" style={{ fontSize: 18, color: activeSection === tab.id ? '#E50914' : undefined }}>{tab.icon}</span>
                                 {tab.label}
                                 {activeSection === tab.id && (
-                                    <motion.div layoutId="finale-tab" className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-[#C17C64]" />
+                                    <motion.div layoutId="finale-tab" className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-[#E50914]" />
                                 )}
                             </button>
                         ))}
@@ -406,32 +406,32 @@ function SeasonFinale() {
                         <motion.div key="overview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
                             {/* Mastery ring + stats */}
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                                <div className="lg:col-span-1 bg-white rounded-2xl border border-[#D8CCBE] p-6 flex flex-col items-center justify-center">
-                                    <ProgressRing value={avgMastery} color={avgMastery >= 80 ? '#8FA395' : '#C17C64'} label="Avg Mastery" delay={0.2} />
-                                    <p className="text-xs text-[#9A8E82] mt-3 text-center">
+                                <div className="lg:col-span-1 bg-[#1E1E1E] rounded-2xl border border-[#333333] p-6 flex flex-col items-center justify-center">
+                                    <ProgressRing value={avgMastery} color={avgMastery >= 80 ? '#46D369' : '#E50914'} label="Avg Mastery" delay={0.2} />
+                                    <p className="text-xs text-[#808080] mt-3 text-center">
                                         {avgMastery >= 90 ? 'Outstanding performance!' : avgMastery >= 70 ? 'Great work, keep it up!' : 'Good start, room to grow!'}
                                     </p>
                                 </div>
                                 <div className="lg:col-span-2 grid grid-cols-2 gap-4">
                                     {[
-                                        { icon: 'school', label: 'Concepts Mastered', value: stats.mastered, color: '#8FA395' },
-                                        { icon: 'star', label: 'Total XP', value: stats.xp, color: '#D4A574' },
-                                        { icon: 'diamond', label: 'Perfect Scores', value: perfectCount, color: '#C17C64' },
-                                        { icon: 'military_tech', label: 'Current Level', value: stats.level, color: '#6B5E52' },
+                                        { icon: 'school', label: 'Concepts Mastered', value: stats.mastered, color: '#46D369' },
+                                        { icon: 'star', label: 'Total XP', value: stats.xp, color: '#E87C03' },
+                                        { icon: 'diamond', label: 'Perfect Scores', value: perfectCount, color: '#E50914' },
+                                        { icon: 'military_tech', label: 'Current Level', value: stats.level, color: '#B3B3B3' },
                                     ].map((s, i) => (
                                         <motion.div
                                             key={s.label}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.3 + i * 0.1 }}
-                                            className="bg-white rounded-xl border border-[#D8CCBE] p-4 flex items-center gap-3"
+                                            className="bg-[#1E1E1E] rounded-xl border border-[#333333] p-4 flex items-center gap-3"
                                         >
                                             <div className="size-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${s.color}12` }}>
                                                 <span className="material-symbols-outlined" style={{ fontSize: 20, color: s.color, fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
                                             </div>
                                             <div>
-                                                <p className="text-xl font-bold text-[#2A2018]"><AnimatedNumber value={s.value} delay={0.4 + i * 0.1} /></p>
-                                                <p className="text-[9px] uppercase tracking-wider text-[#9A8E82] font-bold">{s.label}</p>
+                                                <p className="text-xl font-bold text-[#E5E5E5]"><AnimatedNumber value={s.value} delay={0.4 + i * 0.1} /></p>
+                                                <p className="text-[9px] uppercase tracking-wider text-[#808080] font-bold">{s.label}</p>
                                             </div>
                                         </motion.div>
                                     ))}
@@ -440,8 +440,8 @@ function SeasonFinale() {
 
                             {/* Badges */}
                             <div className="mb-8">
-                                <h3 className="text-lg font-bold text-[#2A2018] mb-4 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
+                                <h3 className="text-lg font-bold text-[#E5E5E5] mb-4 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#E87C03]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>workspace_premium</span>
                                     Badges Earned
                                 </h3>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -452,14 +452,14 @@ function SeasonFinale() {
                             </div>
 
                             {/* Mastery heatmap */}
-                            <div className="bg-white rounded-2xl border border-[#D8CCBE] p-6">
-                                <h3 className="text-sm font-bold text-[#2A2018] mb-4 flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#6B5E52]" style={{ fontSize: 18 }}>grid_view</span>
+                            <div className="bg-[#1E1E1E] rounded-2xl border border-[#333333] p-6">
+                                <h3 className="text-sm font-bold text-[#E5E5E5] mb-4 flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-[#B3B3B3]" style={{ fontSize: 18 }}>grid_view</span>
                                     Mastery Heatmap
                                 </h3>
                                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                     {episodes.map((ep, i) => {
-                                        const color = ep.mastery >= 90 ? '#8FA395' : ep.mastery >= 70 ? '#D4A574' : '#C17C64';
+                                        const color = ep.mastery >= 90 ? '#46D369' : ep.mastery >= 70 ? '#E87C03' : '#E50914';
                                         return (
                                             <motion.div
                                                 key={ep.id}
@@ -470,7 +470,7 @@ function SeasonFinale() {
                                                 style={{ backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
                                             >
                                                 <p className="text-lg font-bold" style={{ color }}>{ep.mastery}%</p>
-                                                <p className="text-[9px] text-[#6B5E52] font-medium truncate mt-0.5">{ep.title}</p>
+                                                <p className="text-[9px] text-[#B3B3B3] font-medium truncate mt-0.5">{ep.title}</p>
                                             </motion.div>
                                         );
                                     })}
@@ -484,7 +484,7 @@ function SeasonFinale() {
                         <motion.div key="episodes" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                             <div className="space-y-3">
                                 {episodes.map((ep, i) => {
-                                    const color = ep.mastery >= 90 ? '#8FA395' : ep.mastery >= 70 ? '#D4A574' : '#C17C64';
+                                    const color = ep.mastery >= 90 ? '#46D369' : ep.mastery >= 70 ? '#E87C03' : '#E50914';
                                     const grade = ep.mastery >= 90 ? 'A+' : ep.mastery >= 80 ? 'A' : ep.mastery >= 70 ? 'B' : ep.mastery >= 60 ? 'C' : 'D';
                                     return (
                                         <motion.div
@@ -493,16 +493,16 @@ function SeasonFinale() {
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: i * 0.06 }}
                                             whileHover={{ x: 4 }}
-                                            className="bg-white rounded-xl border border-[#D8CCBE] p-5 flex items-center gap-4 cursor-pointer hover:border-[#C17C64]/30 transition-all"
+                                            className="bg-[#1E1E1E] rounded-xl border border-[#333333] p-5 flex items-center gap-4 cursor-pointer hover:border-[#E50914]/30 transition-all"
                                             onClick={() => router.push(`/episode/${ep.id}?concept_id=${ep.id}`)}
                                         >
                                             <div className="size-11 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}15` }}>
                                                 <span className="text-sm font-bold" style={{ color }}>{i + 1}</span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h4 className="text-sm font-semibold text-[#2A2018] truncate">{ep.title}</h4>
+                                                <h4 className="text-sm font-semibold text-[#E5E5E5] truncate">{ep.title}</h4>
                                                 <div className="flex items-center gap-2 mt-1.5">
-                                                    <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden max-w-[180px]">
+                                                    <div className="flex-1 h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden max-w-[180px]">
                                                         <motion.div
                                                             className="h-full rounded-full"
                                                             style={{ backgroundColor: color }}
@@ -532,18 +532,18 @@ function SeasonFinale() {
                     {/* ── LEADERBOARD TAB ── */}
                     {activeSection === 'leaderboard' && (
                         <motion.div key="leaderboard" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-                            <div className="bg-white rounded-2xl border border-[#D8CCBE] overflow-hidden">
+                            <div className="bg-[#1E1E1E] rounded-2xl border border-[#333333] overflow-hidden">
                                 {/* Top 3 podium */}
-                                <div className="bg-gradient-to-br from-[#2A2018] to-[#3D3228] px-6 py-8">
-                                    <h3 className="text-center text-sm font-bold text-[#D4A574] uppercase tracking-[0.2em] mb-6">Season Leaderboard</h3>
+                                <div className="bg-gradient-to-br from-[#141414] to-[#1A1A1A] px-6 py-8">
+                                    <h3 className="text-center text-sm font-bold text-[#E87C03] uppercase tracking-[0.2em] mb-6">Season Leaderboard</h3>
                                     <div className="flex items-end justify-center gap-4">
                                         {[1, 0, 2].map((idx) => {
                                             const entry = leaderboard[idx];
                                             if (!entry) return null;
                                             const heights = ['h-28', 'h-20', 'h-16'];
                                             const podiumH = heights[entry.rank - 1] || 'h-14';
-                                            const medals = ['#D4A574', '#9A8E82', '#C17C64'];
-                                            const medalColor = medals[entry.rank - 1] || '#6B5E52';
+                                            const medals = ['#E87C03', '#808080', '#E50914'];
+                                            const medalColor = medals[entry.rank - 1] || '#B3B3B3';
                                             return (
                                                 <motion.div
                                                     key={entry.rank}
@@ -552,16 +552,16 @@ function SeasonFinale() {
                                                     transition={{ delay: 0.3 + idx * 0.15, type: 'spring' }}
                                                     className="flex flex-col items-center"
                                                 >
-                                                    <div className={`size-12 rounded-full flex items-center justify-center mb-2 ${entry.isYou ? 'ring-2 ring-[#D4A574] ring-offset-2 ring-offset-[#2A2018]' : ''}`}
+                                                    <div className={`size-12 rounded-full flex items-center justify-center mb-2 ${entry.isYou ? 'ring-2 ring-[#E87C03] ring-offset-2 ring-offset-[#141414]' : ''}`}
                                                         style={{ backgroundColor: `${medalColor}25` }}>
                                                         <span className="material-symbols-outlined" style={{ fontSize: 20, color: medalColor, fontVariationSettings: "'FILL' 1" }}>
                                                             {entry.rank === 1 ? 'emoji_events' : entry.rank === 2 ? 'military_tech' : 'star'}
                                                         </span>
                                                     </div>
-                                                    <span className={`text-xs font-bold mb-1 ${entry.isYou ? 'text-[#D4A574]' : 'text-[#D8CCBE]'}`}>
+                                                    <span className={`text-xs font-bold mb-1 ${entry.isYou ? 'text-[#E87C03]' : 'text-[#333333]'}`}>
                                                         {entry.isYou ? 'You' : entry.name}
                                                     </span>
-                                                    <span className="text-[10px] text-[#9A8E82] mb-2">{entry.xp} XP</span>
+                                                    <span className="text-[10px] text-[#808080] mb-2">{entry.xp} XP</span>
                                                     <div className={`w-20 ${podiumH} rounded-t-lg flex items-start justify-center pt-2`} style={{ backgroundColor: `${medalColor}30` }}>
                                                         <span className="text-xl font-extrabold" style={{ color: medalColor }}>#{entry.rank}</span>
                                                     </div>
@@ -572,25 +572,25 @@ function SeasonFinale() {
                                 </div>
 
                                 {/* Full list */}
-                                <div className="divide-y divide-[#E2D8CC]">
+                                <div className="divide-y divide-[#2E2E2E]">
                                     {leaderboard.map((entry, i) => (
                                         <motion.div
                                             key={i}
                                             initial={{ opacity: 0, x: -20 }}
                                             animate={{ opacity: 1, x: 0 }}
                                             transition={{ delay: 0.5 + i * 0.05 }}
-                                            className={`flex items-center gap-4 px-6 py-3.5 ${entry.isYou ? 'bg-[#C17C64]/5' : ''}`}
+                                            className={`flex items-center gap-4 px-6 py-3.5 ${entry.isYou ? 'bg-[#E50914]/5' : ''}`}
                                         >
-                                            <span className={`w-6 text-center font-bold text-sm ${entry.rank <= 3 ? 'text-[#D4A574]' : 'text-[#9A8E82]'}`}>
+                                            <span className={`w-6 text-center font-bold text-sm ${entry.rank <= 3 ? 'text-[#E87C03]' : 'text-[#808080]'}`}>
                                                 {entry.rank}
                                             </span>
-                                            <div className={`size-8 rounded-full flex items-center justify-center ${entry.isYou ? 'bg-[#C17C64]/15' : 'bg-[#E2D8CC]'}`}>
-                                                <span className="material-symbols-outlined" style={{ fontSize: 16, color: entry.isYou ? '#C17C64' : '#9A8E82' }}>person</span>
+                                            <div className={`size-8 rounded-full flex items-center justify-center ${entry.isYou ? 'bg-[#E50914]/15' : 'bg-[#2E2E2E]'}`}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: 16, color: entry.isYou ? '#E50914' : '#808080' }}>person</span>
                                             </div>
-                                            <span className={`flex-1 text-sm font-medium ${entry.isYou ? 'text-[#C17C64] font-bold' : 'text-[#2A2018]'}`}>
+                                            <span className={`flex-1 text-sm font-medium ${entry.isYou ? 'text-[#E50914] font-bold' : 'text-[#E5E5E5]'}`}>
                                                 {entry.isYou ? `${entry.name} (You)` : entry.name}
                                             </span>
-                                            <span className="text-sm font-bold text-[#6B5E52]">{entry.xp} XP</span>
+                                            <span className="text-sm font-bold text-[#B3B3B3]">{entry.xp} XP</span>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -602,8 +602,8 @@ function SeasonFinale() {
                     {activeSection === 'next' && (
                         <motion.div key="next" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                             <div className="mb-6">
-                                <h3 className="text-lg font-bold text-[#2A2018] mb-2">Recommended Next Steps</h3>
-                                <p className="text-sm text-[#6B5E52]">Based on your performance, here's what we suggest next.</p>
+                                <h3 className="text-lg font-bold text-[#E5E5E5] mb-2">Recommended Next Steps</h3>
+                                <p className="text-sm text-[#B3B3B3]">Based on your performance, here's what we suggest next.</p>
                             </div>
 
                             <div className="space-y-3 mb-8">
@@ -612,7 +612,7 @@ function SeasonFinale() {
                                         title="Review Weak Spots"
                                         description={`Your average mastery is ${avgMastery}%. Revisit episodes where you scored below 80% to strengthen your foundation.`}
                                         icon="refresh"
-                                        color="#C17C64"
+                                        color="#E50914"
                                         onClick={() => router.push(`/bridge-sprint?concept_id=${seasonId}`)}
                                         delay={0.1}
                                     />
@@ -621,7 +621,7 @@ function SeasonFinale() {
                                     title="Practice with AI Mentor"
                                     description="Get Socratic-style guidance to deepen your understanding of the concepts you've learned."
                                     icon="psychology"
-                                    color="#D4A574"
+                                    color="#E87C03"
                                     onClick={() => router.push('/mentor')}
                                     delay={0.2}
                                 />
@@ -630,7 +630,7 @@ function SeasonFinale() {
                                         title={`Start Next: ${nextConcepts[0]?.label}`}
                                         description={`Continue your learning journey with the next concept in your constellation. Current mastery: ${nextConcepts[0]?.mastery}%`}
                                         icon="rocket_launch"
-                                        color="#8FA395"
+                                        color="#46D369"
                                         onClick={() => router.push(`/season/${nextConcepts[0]?.id}`)}
                                         delay={0.3}
                                     />
@@ -639,7 +639,7 @@ function SeasonFinale() {
                                     title="Spaced Repetition Review"
                                     description="Use Leitner box flashcards to make sure you retain what you've learned over time."
                                     icon="style"
-                                    color="#6B5E52"
+                                    color="#B3B3B3"
                                     onClick={() => router.push('/dashboard')}
                                     delay={0.4}
                                 />
@@ -648,8 +648,8 @@ function SeasonFinale() {
                             {/* Next concepts preview */}
                             {nextConcepts.length > 0 && (
                                 <div>
-                                    <h3 className="text-sm font-bold text-[#2A2018] mb-3 flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 18 }}>explore</span>
+                                    <h3 className="text-sm font-bold text-[#E5E5E5] mb-3 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-[#46D369]" style={{ fontSize: 18 }}>explore</span>
                                         Upcoming Concepts
                                     </h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -661,17 +661,17 @@ function SeasonFinale() {
                                                 transition={{ delay: 0.5 + i * 0.1 }}
                                                 whileHover={{ y: -3, scale: 1.02 }}
                                                 onClick={() => router.push(`/season/${concept.id}`)}
-                                                className="bg-white rounded-xl border border-[#D8CCBE] p-4 text-left hover:border-[#8FA395]/40 transition-all group"
+                                                className="bg-[#1E1E1E] rounded-xl border border-[#333333] p-4 text-left hover:border-[#46D369]/40 transition-all group"
                                             >
-                                                <div className="size-10 rounded-lg bg-[#8FA395]/10 flex items-center justify-center mb-3">
-                                                    <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 20 }}>play_circle</span>
+                                                <div className="size-10 rounded-lg bg-[#46D369]/10 flex items-center justify-center mb-3">
+                                                    <span className="material-symbols-outlined text-[#46D369]" style={{ fontSize: 20 }}>play_circle</span>
                                                 </div>
-                                                <h4 className="text-sm font-semibold text-[#2A2018] group-hover:text-[#8FA395] transition-colors truncate">{concept.label}</h4>
+                                                <h4 className="text-sm font-semibold text-[#E5E5E5] group-hover:text-[#46D369] transition-colors truncate">{concept.label}</h4>
                                                 <div className="flex items-center gap-2 mt-2">
-                                                    <div className="flex-1 h-1 bg-[#E2D8CC] rounded-full overflow-hidden">
-                                                        <div className="h-full rounded-full bg-[#8FA395]" style={{ width: `${concept.mastery}%` }} />
+                                                    <div className="flex-1 h-1 bg-[#2E2E2E] rounded-full overflow-hidden">
+                                                        <div className="h-full rounded-full bg-[#46D369]" style={{ width: `${concept.mastery}%` }} />
                                                     </div>
-                                                    <span className="text-[10px] font-bold text-[#9A8E82]">{concept.mastery}%</span>
+                                                    <span className="text-[10px] font-bold text-[#808080]">{concept.mastery}%</span>
                                                 </div>
                                             </motion.button>
                                         ))}
@@ -691,12 +691,12 @@ function SeasonFinale() {
                 initial={{ y: 40, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 1.2 }}
-                className="sticky bottom-0 z-20 bg-white/90 backdrop-blur-sm border-t border-[#D8CCBE] py-4 px-6"
+                className="sticky bottom-0 z-20 bg-[#1E1E1E]/90 backdrop-blur-sm border-t border-[#333333] py-4 px-6"
             >
                 <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
                     <button
                         onClick={() => router.push('/home')}
-                        className="flex items-center gap-2 px-5 py-3 rounded-xl border border-[#D8CCBE] text-[#6B5E52] font-semibold text-sm hover:bg-[#F5EDE4] transition-all"
+                        className="flex items-center gap-2 px-5 py-3 rounded-xl border border-[#333333] text-[#B3B3B3] font-semibold text-sm hover:bg-[#141414] transition-all"
                     >
                         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>home</span>
                         Back to Home
@@ -704,7 +704,7 @@ function SeasonFinale() {
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => router.push('/dashboard')}
-                            className="flex items-center gap-2 px-5 py-3 rounded-xl border border-[#D8CCBE] text-[#6B5E52] font-semibold text-sm hover:bg-[#F5EDE4] transition-all"
+                            className="flex items-center gap-2 px-5 py-3 rounded-xl border border-[#333333] text-[#B3B3B3] font-semibold text-sm hover:bg-[#141414] transition-all"
                         >
                             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>analytics</span>
                             Dashboard
@@ -712,7 +712,7 @@ function SeasonFinale() {
                         {nextConcepts.length > 0 && (
                             <button
                                 onClick={() => router.push(`/season/${nextConcepts[0]?.id}`)}
-                                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C17C64] text-white font-bold text-sm hover:brightness-110 transition-all shadow-[0_0_20px_rgba(193,124,100,0.2)]"
+                                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E50914] text-white font-bold text-sm hover:brightness-110 transition-all shadow-[0_0_20px_rgba(193,124,100,0.2)]"
                             >
                                 Next Season
                                 <span className="material-symbols-outlined" style={{ fontSize: 18 }}>arrow_forward</span>
@@ -728,8 +728,8 @@ function SeasonFinale() {
 export default function SeasonFinalePage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[#F5EDE4] flex items-center justify-center">
-                <div className="size-10 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+                <div className="size-10 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
             </div>
         }>
             <SeasonFinale />

@@ -10,35 +10,35 @@ import { getDashboard, getLearnerId, getLearnerName, getDueConcepts, getConstell
 const FALLBACK_STATS = { xp: 0, streak: 0, concepts_mastered: 0, level: 1 };
 
 const HEATMAP_COLORS = {
-    mastered: '#8FA395',
-    learning: '#D4A574',
-    weak: '#C17C64',
-    not_started: '#E2D8CC',
+    mastered: '#46D369',
+    learning: '#E87C03',
+    weak: '#E50914',
+    not_started: '#2E2E2E',
 };
 
 const URGENCY_STYLES = {
-    high: { bg: 'bg-[#C17C64]/10', border: 'border-[#C17C64]/30', text: 'text-[#C17C64]', label: 'Urgent' },
-    medium: { bg: 'bg-[#D4A574]/10', border: 'border-[#D4A574]/30', text: 'text-[#D4A574]', label: 'Soon' },
-    low: { bg: 'bg-[#8FA395]/10', border: 'border-[#8FA395]/30', text: 'text-[#8FA395]', label: 'OK' },
+    high: { bg: 'bg-[#E50914]/10', border: 'border-[#E50914]/30', text: 'text-[#E50914]', label: 'Urgent' },
+    medium: { bg: 'bg-[#E87C03]/10', border: 'border-[#E87C03]/30', text: 'text-[#E87C03]', label: 'Soon' },
+    low: { bg: 'bg-[#46D369]/10', border: 'border-[#46D369]/30', text: 'text-[#46D369]', label: 'OK' },
 };
 
 // ─── Human-readable activity mapping ────────────────────────────────────────
 const ACTIVITY_MAP = {
-    STRUGGLE_SIGNAL: { label: 'Asked for help on', icon: 'help_center', color: '#C17C64' },
-    EPISODE_COMPLETE: { label: 'Completed episode', icon: 'check_circle', color: '#8FA395' },
-    EPISODE_START: { label: 'Started learning', icon: 'play_circle', color: '#D4A574' },
-    ASSESSMENT_COMPLETE: { label: 'Finished assessment for', icon: 'quiz', color: '#8FA395' },
-    ASSESSMENT_START: { label: 'Began assessment on', icon: 'assignment', color: '#D4A574' },
+    STRUGGLE_SIGNAL: { label: 'Asked for help on', icon: 'help_center', color: '#E50914' },
+    EPISODE_COMPLETE: { label: 'Completed episode', icon: 'check_circle', color: '#46D369' },
+    EPISODE_START: { label: 'Started learning', icon: 'play_circle', color: '#E87C03' },
+    ASSESSMENT_COMPLETE: { label: 'Finished assessment for', icon: 'quiz', color: '#46D369' },
+    ASSESSMENT_START: { label: 'Began assessment on', icon: 'assignment', color: '#E87C03' },
     LEITNER_REVIEW: { label: 'Reviewed flashcard', icon: 'style', color: '#a78bfa' },
-    HINT_REQUEST: { label: 'Requested a hint on', icon: 'lightbulb', color: '#D4A574' },
-    CODE_EXECUTE: { label: 'Ran code for', icon: 'code', color: '#6B5E52' },
-    BRIDGE_SPRINT: { label: 'Completed bridge sprint', icon: 'sprint', color: '#C17C64' },
-    BKT_UPDATE: { label: 'Mastery updated for', icon: 'trending_up', color: '#8FA395' },
+    HINT_REQUEST: { label: 'Requested a hint on', icon: 'lightbulb', color: '#E87C03' },
+    CODE_EXECUTE: { label: 'Ran code for', icon: 'code', color: '#B3B3B3' },
+    BRIDGE_SPRINT: { label: 'Completed bridge sprint', icon: 'sprint', color: '#E50914' },
+    BKT_UPDATE: { label: 'Mastery updated for', icon: 'trending_up', color: '#46D369' },
     VIDEO_GENERATE: { label: 'Generated presentation for', icon: 'slideshow', color: '#a78bfa' },
-    GOAL_SET: { label: 'Set learning goal', icon: 'flag', color: '#D4A574' },
+    GOAL_SET: { label: 'Set learning goal', icon: 'flag', color: '#E87C03' },
 };
 
-const DEFAULT_ACTIVITY = { label: 'Activity on', icon: 'history', color: '#9A8E82' };
+const DEFAULT_ACTIVITY = { label: 'Activity on', icon: 'history', color: '#808080' };
 
 function formatConceptId(id) {
     if (!id) return '';
@@ -65,12 +65,12 @@ function PlacementGauge({ percentage, size = 180 }) {
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percentage / 100) * circumference;
     const center = size / 2;
-    const color = percentage >= 75 ? '#8FA395' : percentage >= 50 ? '#D4A574' : percentage >= 25 ? '#D4A574' : '#C17C64';
+    const color = percentage >= 75 ? '#46D369' : percentage >= 50 ? '#E87C03' : percentage >= 25 ? '#E87C03' : '#E50914';
 
     return (
         <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
             <svg width={size} height={size} className="-rotate-90">
-                <circle cx={center} cy={center} r={radius} fill="none" stroke="#D8CCBE" strokeWidth={strokeWidth} />
+                <circle cx={center} cy={center} r={radius} fill="none" stroke="#333333" strokeWidth={strokeWidth} />
                 <motion.circle
                     cx={center} cy={center} r={radius} fill="none" stroke={color}
                     strokeWidth={strokeWidth} strokeLinecap="round"
@@ -90,8 +90,8 @@ function PlacementGauge({ percentage, size = 180 }) {
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-4xl font-extrabold text-[#2A2018] font-[Manrope]">{percentage}%</span>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-[#9A8E82] font-bold mt-1">Placement Ready</span>
+                <span className="text-4xl font-extrabold text-[#E5E5E5] font-[Manrope]">{percentage}%</span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[#808080] font-bold mt-1">Placement Ready</span>
             </div>
         </div>
     );
@@ -108,9 +108,9 @@ function SkillDonut({ proficiency = 0, size = 140 }) {
     return (
         <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
             <svg width={size} height={size} className="-rotate-90">
-                <circle cx={center} cy={center} r={radius} fill="none" stroke="#D8CCBE" strokeWidth={strokeWidth} />
+                <circle cx={center} cy={center} r={radius} fill="none" stroke="#333333" strokeWidth={strokeWidth} />
                 <motion.circle
-                    cx={center} cy={center} r={radius} fill="none" stroke="#C17C64"
+                    cx={center} cy={center} r={radius} fill="none" stroke="#E50914"
                     strokeWidth={strokeWidth} strokeLinecap="round"
                     strokeDasharray={circumference}
                     initial={{ strokeDashoffset: circumference }}
@@ -119,8 +119,8 @@ function SkillDonut({ proficiency = 0, size = 140 }) {
                 />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-extrabold text-[#2A2018] font-[Manrope]">{proficiency}%</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#9A8E82] font-bold">Proficiency</span>
+                <span className="text-2xl font-extrabold text-[#E5E5E5] font-[Manrope]">{proficiency}%</span>
+                <span className="text-[9px] uppercase tracking-widest text-[#808080] font-bold">Proficiency</span>
             </div>
         </div>
     );
@@ -130,12 +130,12 @@ function SkillDonut({ proficiency = 0, size = 140 }) {
 function EmptyState({ icon, message, actionLabel, onAction }) {
     return (
         <div className="flex flex-col items-center justify-center py-8 text-center">
-            <span className="material-symbols-outlined text-[#D8CCBE] mb-2" style={{ fontSize: 36 }}>{icon}</span>
-            <p className="text-sm text-[#9A8E82] max-w-xs">{message}</p>
+            <span className="material-symbols-outlined text-[#333333] mb-2" style={{ fontSize: 36 }}>{icon}</span>
+            <p className="text-sm text-[#808080] max-w-xs">{message}</p>
             {actionLabel && (
                 <button
                     onClick={onAction}
-                    className="mt-3 px-4 py-2 rounded-lg bg-[#D4A574] text-white text-xs font-bold hover:brightness-110 transition-all"
+                    className="mt-3 px-4 py-2 rounded-lg bg-[#E87C03] text-white text-xs font-bold hover:brightness-110 transition-all"
                 >
                     {actionLabel}
                 </button>
@@ -213,8 +213,8 @@ export default function DashboardPage() {
             <AppLayout>
                 <div className="h-[80vh] flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
-                        <div className="w-10 h-10 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
-                        <span className="text-[#6B5E52] text-sm">Loading dashboard...</span>
+                        <div className="w-10 h-10 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
+                        <span className="text-[#B3B3B3] text-sm">Loading dashboard...</span>
                     </div>
                 </div>
             </AppLayout>
@@ -228,14 +228,14 @@ export default function DashboardPage() {
                 {/* ═══ Welcome / What's Next Hero ═══ */}
                 <motion.div
                     custom={0} variants={fadeIn} initial="hidden" animate="visible"
-                    className="bg-gradient-to-r from-[#C17C64]/10 via-[#D4A574]/10 to-[#8FA395]/10 border border-[#D8CCBE] rounded-xl p-6"
+                    className="bg-gradient-to-r from-[#E50914]/10 via-[#E87C03]/10 to-[#46D369]/10 border border-[#333333] rounded-xl p-6"
                 >
                     <div className="flex items-start justify-between flex-wrap gap-4">
                         <div>
-                            <h2 className="text-xl font-bold text-[#2A2018] font-[Manrope]">
+                            <h2 className="text-xl font-bold text-[#E5E5E5] font-[Manrope]">
                                 {isNewUser ? `Welcome, ${learnerName}!` : `Welcome back, ${learnerName}!`}
                             </h2>
-                            <p className="text-sm text-[#6B5E52] mt-1">
+                            <p className="text-sm text-[#B3B3B3] mt-1">
                                 {isNewUser
                                     ? 'Start your learning journey — pick a topic below or explore the constellation.'
                                     : leitnerItems.length > 0
@@ -252,7 +252,7 @@ export default function DashboardPage() {
                                         const first = leitnerItems[0];
                                         router.push(`/season/${first.concept_id}`);
                                     }}
-                                    className="px-4 py-2.5 rounded-lg bg-[#C17C64] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm flex items-center gap-2"
+                                    className="px-4 py-2.5 rounded-lg bg-[#E50914] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm flex items-center gap-2"
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>style</span>
                                     Review Due Cards
@@ -260,7 +260,7 @@ export default function DashboardPage() {
                             )}
                             <button
                                 onClick={() => router.push('/home')}
-                                className="px-4 py-2.5 rounded-lg bg-[#D4A574] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm flex items-center gap-2"
+                                className="px-4 py-2.5 rounded-lg bg-[#E87C03] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm flex items-center gap-2"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: 18 }}>explore</span>
                                 Explore Topics
@@ -271,12 +271,12 @@ export default function DashboardPage() {
                     {/* Quick-start topics for new users */}
                     {isNewUser && nextTopics.length > 0 && (
                         <div className="mt-4 flex items-center gap-3 flex-wrap">
-                            <span className="text-xs text-[#9A8E82] font-semibold">Suggested:</span>
+                            <span className="text-xs text-[#808080] font-semibold">Suggested:</span>
                             {nextTopics.map((topic) => (
                                 <button
                                     key={topic.id || topic.concept_id}
                                     onClick={() => router.push(`/season/${topic.id || topic.concept_id}`)}
-                                    className="px-3 py-1.5 rounded-full bg-white border border-[#D8CCBE] text-xs font-semibold text-[#6B5E52] hover:border-[#C17C64]/40 hover:text-[#C17C64] transition-colors"
+                                    className="px-3 py-1.5 rounded-full bg-[#1E1E1E] border border-[#333333] text-xs font-semibold text-[#B3B3B3] hover:border-[#E50914]/40 hover:text-[#E50914] transition-colors"
                                 >
                                     {formatConceptId(topic.label || topic.id || topic.concept_id)}
                                 </button>
@@ -288,22 +288,22 @@ export default function DashboardPage() {
                 {/* ═══ Stats Row: Quick Glance ═══ */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                        { icon: 'bolt', color: '#D4A574', label: 'Total XP', value: stats.xp.toLocaleString() },
-                        { icon: 'local_fire_department', color: '#C17C64', label: 'Day Streak', value: stats.streak },
-                        { icon: 'verified', color: '#8FA395', label: 'Mastered', value: `${stats.concepts_mastered}${totalConcepts > 0 ? `/${totalConcepts}` : ''}` },
-                        { icon: 'military_tech', color: '#D4A574', label: 'Level', value: stats.level },
+                        { icon: 'bolt', color: '#E87C03', label: 'Total XP', value: stats.xp.toLocaleString() },
+                        { icon: 'local_fire_department', color: '#E50914', label: 'Day Streak', value: stats.streak },
+                        { icon: 'verified', color: '#46D369', label: 'Mastered', value: `${stats.concepts_mastered}${totalConcepts > 0 ? `/${totalConcepts}` : ''}` },
+                        { icon: 'military_tech', color: '#E87C03', label: 'Level', value: stats.level },
                     ].map((stat, idx) => (
                         <motion.div
                             key={stat.label}
                             custom={idx + 1} variants={fadeIn} initial="hidden" animate="visible"
-                            className="bg-white border border-[#D8CCBE] rounded-xl p-4 flex items-center gap-3"
+                            className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-4 flex items-center gap-3"
                         >
                             <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${stat.color}15` }}>
                                 <span className="material-symbols-outlined" style={{ fontSize: 22, color: stat.color, fontVariationSettings: "'FILL' 1" }}>{stat.icon}</span>
                             </div>
                             <div>
-                                <p className="text-xl font-extrabold text-[#2A2018] font-[Manrope]">{stat.value}</p>
-                                <p className="text-[10px] text-[#9A8E82] uppercase tracking-wider font-bold">{stat.label}</p>
+                                <p className="text-xl font-extrabold text-[#E5E5E5] font-[Manrope]">{stat.value}</p>
+                                <p className="text-[10px] text-[#808080] uppercase tracking-wider font-bold">{stat.label}</p>
                             </div>
                         </motion.div>
                     ))}
@@ -312,15 +312,15 @@ export default function DashboardPage() {
                 {/* ═══ XP Progress Bar ═══ */}
                 <motion.div
                     custom={5} variants={fadeIn} initial="hidden" animate="visible"
-                    className="bg-white border border-[#D8CCBE] rounded-xl p-4"
+                    className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-4"
                 >
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs text-[#9A8E82] font-semibold">Progress to Level {stats.level + 1}</span>
-                        <span className="text-xs font-bold text-[#D4A574]">{stats.xp.toLocaleString()} / {xpNextLevel.toLocaleString()} XP</span>
+                        <span className="text-xs text-[#808080] font-semibold">Progress to Level {stats.level + 1}</span>
+                        <span className="text-xs font-bold text-[#E87C03]">{stats.xp.toLocaleString()} / {xpNextLevel.toLocaleString()} XP</span>
                     </div>
-                    <div className="w-full h-3 bg-[#E2D8CC] rounded-full overflow-hidden">
+                    <div className="w-full h-3 bg-[#2E2E2E] rounded-full overflow-hidden">
                         <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-[#D4A574] to-[#CB8A5E]"
+                            className="h-full rounded-full bg-gradient-to-r from-[#E87C03] to-[#E87C03]"
                             initial={{ width: 0 }}
                             animate={{ width: `${Math.min(100, (stats.xp / xpNextLevel) * 100)}%` }}
                             transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
@@ -337,14 +337,14 @@ export default function DashboardPage() {
                         {/* Placement Readiness */}
                         <motion.div
                             custom={6} variants={fadeIn} initial="hidden" animate="visible"
-                            className="bg-white border border-[#D8CCBE] rounded-xl p-6 flex flex-col items-center"
+                            className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-6 flex flex-col items-center"
                         >
                             <div className="flex items-center gap-2 self-start mb-4">
-                                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>target</span>
-                                <h3 className="text-base font-bold text-[#2A2018] font-[Manrope]">Placement Readiness</h3>
+                                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>target</span>
+                                <h3 className="text-base font-bold text-[#E5E5E5] font-[Manrope]">Placement Readiness</h3>
                             </div>
                             <PlacementGauge percentage={placement} />
-                            <p className="text-xs text-[#9A8E82] mt-4 text-center leading-relaxed max-w-xs">
+                            <p className="text-xs text-[#808080] mt-4 text-center leading-relaxed max-w-xs">
                                 {placement >= 75 ? 'You are well-prepared. Keep polishing weak areas.' :
                                  placement >= 50 ? 'Good progress! Focus on weak concepts to level up.' :
                                  placement > 0 ? 'Keep learning! Complete more episodes to improve readiness.' :
@@ -353,7 +353,7 @@ export default function DashboardPage() {
                             <div className="flex items-center gap-3 mt-5">
                                 <button
                                     onClick={() => router.push('/onboarding')}
-                                    className="px-4 py-2.5 rounded-lg bg-[#D4A574] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm"
+                                    className="px-4 py-2.5 rounded-lg bg-[#E87C03] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm"
                                 >
                                     <span className="flex items-center gap-2">
                                         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>quiz</span>
@@ -362,7 +362,7 @@ export default function DashboardPage() {
                                 </button>
                                 <button
                                     onClick={() => router.push('/profile')}
-                                    className="px-4 py-2.5 rounded-lg border border-[#D8CCBE] text-[#2A2018] font-semibold text-sm hover:border-[#C17C64]/40 transition-colors"
+                                    className="px-4 py-2.5 rounded-lg border border-[#333333] text-[#E5E5E5] font-semibold text-sm hover:border-[#E50914]/40 transition-colors"
                                 >
                                     <span className="flex items-center gap-2">
                                         <span className="material-symbols-outlined" style={{ fontSize: 18 }}>person</span>
@@ -375,11 +375,11 @@ export default function DashboardPage() {
                         {/* Skill Radar Donut */}
                         <motion.div
                             custom={7} variants={fadeIn} initial="hidden" animate="visible"
-                            className="bg-white border border-[#D8CCBE] rounded-xl p-6 flex flex-col items-center"
+                            className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-6 flex flex-col items-center"
                         >
                             <div className="flex items-center gap-2 self-start mb-4">
-                                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>donut_large</span>
-                                <h3 className="text-base font-bold text-[#2A2018] font-[Manrope]">Skill Radar</h3>
+                                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>donut_large</span>
+                                <h3 className="text-base font-bold text-[#E5E5E5] font-[Manrope]">Skill Radar</h3>
                             </div>
                             {skills.length > 0 ? (
                                 <>
@@ -391,12 +391,12 @@ export default function DashboardPage() {
                                             return (
                                                 <div key={skill.domain || idx}>
                                                     <div className="flex items-center justify-between mb-1">
-                                                        <span className="text-xs text-[#6B5E52]">{domainLabel}</span>
-                                                        <span className="text-xs font-bold text-[#C17C64]">{pct}%</span>
+                                                        <span className="text-xs text-[#B3B3B3]">{domainLabel}</span>
+                                                        <span className="text-xs font-bold text-[#E50914]">{pct}%</span>
                                                     </div>
-                                                    <div className="w-full h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
+                                                    <div className="w-full h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden">
                                                         <motion.div
-                                                            className="h-full rounded-full bg-[#C17C64]"
+                                                            className="h-full rounded-full bg-[#E50914]"
                                                             initial={{ width: 0 }}
                                                             animate={{ width: `${pct}%` }}
                                                             transition={{ duration: 0.8, delay: 0.4 + idx * 0.1 }}
@@ -420,12 +420,12 @@ export default function DashboardPage() {
                         {/* Concept Mastery Heatmap */}
                         <motion.div
                             custom={8} variants={fadeIn} initial="hidden" animate="visible"
-                            className="bg-white border border-[#D8CCBE] rounded-xl p-6"
+                            className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-6"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>grid_view</span>
-                                    <h3 className="text-base font-bold text-[#2A2018] font-[Manrope]">Concept Mastery</h3>
+                                    <span className="material-symbols-outlined text-[#E87C03]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>grid_view</span>
+                                    <h3 className="text-base font-bold text-[#E5E5E5] font-[Manrope]">Concept Mastery</h3>
                                 </div>
                             </div>
                             {heatmapData.length > 0 ? (
@@ -439,7 +439,7 @@ export default function DashboardPage() {
                                         ].map(l => (
                                             <div key={l.label} className="flex items-center gap-1">
                                                 <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: l.color }} />
-                                                <span className="text-[9px] text-[#9A8E82]">{l.label}</span>
+                                                <span className="text-[9px] text-[#808080]">{l.label}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -457,7 +457,7 @@ export default function DashboardPage() {
                                                     className="w-[14px] h-[14px] rounded-[3px] cursor-pointer transition-transform hover:scale-150 hover:z-10"
                                                     style={{ backgroundColor: HEATMAP_COLORS[item.status] || HEATMAP_COLORS.not_started }}
                                                 />
-                                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#2A2018] text-white text-[9px] px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 font-medium">
+                                                <div className="absolute -top-7 left-1/2 -translate-x-1/2 bg-[#333] text-white text-[9px] px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 font-medium">
                                                     {formatConceptId(item.label || item.concept_id || item.id)}
                                                 </div>
                                             </motion.div>
@@ -479,11 +479,11 @@ export default function DashboardPage() {
                         {/* Active Seasons */}
                         <motion.div
                             custom={6} variants={fadeIn} initial="hidden" animate="visible"
-                            className="bg-white border border-[#D8CCBE] rounded-xl p-6"
+                            className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-6"
                         >
                             <div className="flex items-center gap-2 mb-5">
-                                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>movie</span>
-                                <h3 className="text-base font-bold text-[#2A2018] font-[Manrope]">Active Seasons</h3>
+                                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>movie</span>
+                                <h3 className="text-base font-bold text-[#E5E5E5] font-[Manrope]">Active Seasons</h3>
                             </div>
                             {activeSeasons.length > 0 ? (
                                 <div className="space-y-3">
@@ -495,22 +495,22 @@ export default function DashboardPage() {
                                                 initial={{ opacity: 0, x: -12 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: 0.4 + idx * 0.1 }}
-                                                className="bg-[#F0E7DC] border border-[#D8CCBE] rounded-xl p-4 cursor-pointer hover:border-[#C17C64]/30 transition-colors"
+                                                className="bg-[#2A2A2A] border border-[#333333] rounded-xl p-4 cursor-pointer hover:border-[#E50914]/30 transition-colors"
                                                 onClick={() => router.push(`/season/${season.id}`)}
                                             >
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-sm font-semibold text-[#2A2018] truncate">{season.title || formatConceptId(season.id)}</span>
-                                                    <span className="text-xs font-bold text-[#C17C64] ml-2 flex-shrink-0">{pct}%</span>
+                                                    <span className="text-sm font-semibold text-[#E5E5E5] truncate">{season.title || formatConceptId(season.id)}</span>
+                                                    <span className="text-xs font-bold text-[#E50914] ml-2 flex-shrink-0">{pct}%</span>
                                                 </div>
-                                                <div className="w-full h-2 bg-[#E2D8CC] rounded-full overflow-hidden">
+                                                <div className="w-full h-2 bg-[#2E2E2E] rounded-full overflow-hidden">
                                                     <motion.div
-                                                        className="h-full rounded-full bg-gradient-to-r from-[#C17C64] to-[#8FA395]"
+                                                        className="h-full rounded-full bg-gradient-to-r from-[#E50914] to-[#46D369]"
                                                         initial={{ width: 0 }}
                                                         animate={{ width: `${pct}%` }}
                                                         transition={{ duration: 0.8, delay: 0.5 + idx * 0.1 }}
                                                     />
                                                 </div>
-                                                <div className="flex items-center gap-1 mt-2 text-[10px] text-[#9A8E82]">
+                                                <div className="flex items-center gap-1 mt-2 text-[10px] text-[#808080]">
                                                     <span className="material-symbols-outlined" style={{ fontSize: 12 }}>play_circle</span>
                                                     {season.episodes_done ?? Math.round(season.progress * (season.total_episodes || 20))}/{season.total_episodes || 20} episodes
                                                 </div>
@@ -531,11 +531,11 @@ export default function DashboardPage() {
                         {/* Recent Activity Feed */}
                         <motion.div
                             custom={7} variants={fadeIn} initial="hidden" animate="visible"
-                            className="bg-white border border-[#D8CCBE] rounded-xl p-6"
+                            className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-6"
                         >
                             <div className="flex items-center gap-2 mb-5">
                                 <span className="material-symbols-outlined text-[#a78bfa]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>history</span>
-                                <h3 className="text-base font-bold text-[#2A2018] font-[Manrope]">Recent Activity</h3>
+                                <h3 className="text-base font-bold text-[#E5E5E5] font-[Manrope]">Recent Activity</h3>
                             </div>
                             {recentActivity.length > 0 ? (
                                 <div className="space-y-3">
@@ -558,12 +558,12 @@ export default function DashboardPage() {
                                                     <span className="material-symbols-outlined" style={{ fontSize: 18, color, fontVariationSettings: "'FILL' 1" }}>{icon}</span>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm text-[#2A2018] truncate">
-                                                        <span className="text-[#6B5E52]">{label}</span>{' '}
+                                                    <p className="text-sm text-[#E5E5E5] truncate">
+                                                        <span className="text-[#B3B3B3]">{label}</span>{' '}
                                                         <span className="font-semibold">{target}</span>
                                                     </p>
                                                 </div>
-                                                {time && <span className="text-[10px] text-[#9A8E82] flex-shrink-0">{time}</span>}
+                                                {time && <span className="text-[10px] text-[#808080] flex-shrink-0">{time}</span>}
                                             </motion.div>
                                         );
                                     })}
@@ -579,14 +579,14 @@ export default function DashboardPage() {
                         {/* Leitner Review Queue */}
                         <motion.div
                             custom={8} variants={fadeIn} initial="hidden" animate="visible"
-                            className="bg-white border border-[#D8CCBE] rounded-xl p-6"
+                            className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-6"
                         >
                             <div className="flex items-center justify-between mb-5">
                                 <div className="flex items-center gap-2">
-                                    <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>inbox</span>
-                                    <h3 className="text-base font-bold text-[#2A2018] font-[Manrope]">Leitner Review Queue</h3>
+                                    <span className="material-symbols-outlined text-[#E87C03]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>inbox</span>
+                                    <h3 className="text-base font-bold text-[#E5E5E5] font-[Manrope]">Leitner Review Queue</h3>
                                 </div>
-                                <span className="text-xs font-bold text-[#C17C64] bg-[#C17C64]/10 px-2.5 py-1 rounded-full">
+                                <span className="text-xs font-bold text-[#E50914] bg-[#E50914]/10 px-2.5 py-1 rounded-full">
                                     {leitnerItems.length} due
                                 </span>
                             </div>
@@ -600,15 +600,15 @@ export default function DashboardPage() {
                                                 initial={{ opacity: 0, x: 12 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: 0.4 + idx * 0.08 }}
-                                                className="flex items-center gap-3 bg-[#F0E7DC] border border-[#D8CCBE] rounded-xl p-4 cursor-pointer hover:border-[#C17C64]/30 transition-colors"
+                                                className="flex items-center gap-3 bg-[#2A2A2A] border border-[#333333] rounded-xl p-4 cursor-pointer hover:border-[#E50914]/30 transition-colors"
                                                 onClick={() => router.push(`/season/${item.concept_id}`)}
                                             >
-                                                <div className="w-10 h-10 rounded-lg bg-white border border-[#D8CCBE] flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-xs font-bold text-[#6B5E52]">B{item.box}</span>
+                                                <div className="w-10 h-10 rounded-lg bg-[#1E1E1E] border border-[#333333] flex items-center justify-center flex-shrink-0">
+                                                    <span className="text-xs font-bold text-[#B3B3B3]">B{item.box}</span>
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-[#2A2018] truncate">{formatConceptId(item.label || item.concept_id)}</p>
-                                                    <p className="text-[10px] text-[#9A8E82] mt-0.5">Leitner Box {item.box}</p>
+                                                    <p className="text-sm font-semibold text-[#E5E5E5] truncate">{formatConceptId(item.label || item.concept_id)}</p>
+                                                    <p className="text-[10px] text-[#808080] mt-0.5">Leitner Box {item.box}</p>
                                                 </div>
                                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${urgency.bg} ${urgency.border} ${urgency.text}`}>
                                                     {urgency.label}
@@ -633,11 +633,11 @@ export default function DashboardPage() {
                     {/* Fading Knowledge Alerts */}
                     <motion.div
                         custom={9} variants={fadeIn} initial="hidden" animate="visible"
-                        className="bg-white border border-[#D8CCBE] rounded-xl p-6"
+                        className="bg-[#1E1E1E] border border-[#333333] rounded-xl p-6"
                     >
                         <div className="flex items-center gap-2 mb-5">
                             <span className="material-symbols-outlined text-red-400" style={{ fontSize: 20 }}>trending_down</span>
-                            <h3 className="text-base font-bold text-[#2A2018] font-[Manrope]">Fading Knowledge</h3>
+                            <h3 className="text-base font-bold text-[#E5E5E5] font-[Manrope]">Fading Knowledge</h3>
                         </div>
                         {fadingConcepts.length > 0 ? (
                             <div className="space-y-3">
@@ -650,16 +650,16 @@ export default function DashboardPage() {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.5 + idx * 0.1 }}
-                                            className="bg-[#F0E7DC] border border-red-500/20 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-red-500/40 transition-colors"
+                                            className="bg-[#2A2A2A] border border-red-500/20 rounded-xl p-4 flex items-center gap-4 cursor-pointer hover:border-red-500/40 transition-colors"
                                             onClick={() => router.push(`/season/${item.concept_id}`)}
                                         >
                                             <div className="w-10 h-10 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0">
                                                 <span className="material-symbols-outlined text-red-400" style={{ fontSize: 20 }}>warning</span>
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-[#2A2018] truncate">{formatConceptId(item.label || item.concept_id)}</p>
+                                                <p className="text-sm font-semibold text-[#E5E5E5] truncate">{formatConceptId(item.label || item.concept_id)}</p>
                                                 <div className="flex items-center gap-2 mt-1.5">
-                                                    <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
+                                                    <div className="flex-1 h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden">
                                                         <div className="h-full rounded-full bg-red-500" style={{ width: `${pct}%` }} />
                                                     </div>
                                                     <span className="text-[10px] font-bold text-red-400">{pct}%</span>
@@ -676,8 +676,8 @@ export default function DashboardPage() {
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-8 text-center">
-                                <span className="material-symbols-outlined text-[#8FA395] mb-2" style={{ fontSize: 36, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
-                                <p className="text-sm text-[#6B5E52]">All concepts are holding steady!</p>
+                                <span className="material-symbols-outlined text-[#46D369] mb-2" style={{ fontSize: 36, fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                <p className="text-sm text-[#B3B3B3]">All concepts are holding steady!</p>
                             </div>
                         )}
                     </motion.div>
@@ -685,27 +685,27 @@ export default function DashboardPage() {
                     {/* AI Mentor Card */}
                     <motion.div
                         custom={10} variants={fadeIn} initial="hidden" animate="visible"
-                        className="bg-gradient-to-br from-white to-[#F5EDE4] border border-[#C17C64]/20 rounded-xl p-6 flex flex-col justify-between relative overflow-hidden"
+                        className="bg-gradient-to-br from-white to-[#141414] border border-[#E50914]/20 rounded-xl p-6 flex flex-col justify-between relative overflow-hidden"
                     >
-                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#C17C64]/5 to-transparent rounded-bl-full pointer-events-none" />
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#E50914]/5 to-transparent rounded-bl-full pointer-events-none" />
                         <div>
                             <div className="flex items-center gap-2 mb-3">
-                                <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>psychology</span>
-                                <span className="text-xs font-extrabold text-[#C17C64] uppercase tracking-widest">AI Mentor</span>
+                                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>psychology</span>
+                                <span className="text-xs font-extrabold text-[#E50914] uppercase tracking-widest">AI Mentor</span>
                             </div>
-                            <h3 className="text-xl font-bold text-[#2A2018] font-[Manrope] mb-2">Stuck on a concept?</h3>
-                            <p className="text-sm text-[#6B5E52] leading-relaxed mb-6">
+                            <h3 className="text-xl font-bold text-[#E5E5E5] font-[Manrope] mb-2">Stuck on a concept?</h3>
+                            <p className="text-sm text-[#B3B3B3] leading-relaxed mb-6">
                                 Get Socratic guidance, concept breakdowns, and personalized hints from your AI-powered mentor.
                             </p>
                         </div>
                         <div className="flex items-center gap-3 relative">
-                            <button onClick={() => router.push('/mentor')} className="px-5 py-2.5 rounded-lg bg-[#C17C64] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm">
+                            <button onClick={() => router.push('/mentor')} className="px-5 py-2.5 rounded-lg bg-[#E50914] text-white font-bold text-sm hover:brightness-110 transition-all shadow-sm">
                                 <span className="flex items-center gap-2">
                                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>chat</span>
                                     Ask Mentor
                                 </span>
                             </button>
-                            <button onClick={() => router.push('/bridge-sprint')} className="px-5 py-2.5 rounded-lg border border-[#D8CCBE] text-[#2A2018] font-semibold text-sm hover:border-[#C17C64]/40 transition-colors">
+                            <button onClick={() => router.push('/bridge-sprint')} className="px-5 py-2.5 rounded-lg border border-[#333333] text-[#E5E5E5] font-semibold text-sm hover:border-[#E50914]/40 transition-colors">
                                 <span className="flex items-center gap-2">
                                     <span className="material-symbols-outlined" style={{ fontSize: 18 }}>sprint</span>
                                     Bridge Sprint

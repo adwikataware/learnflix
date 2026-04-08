@@ -13,18 +13,18 @@ function TitleSlide({ content, title }) {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
             >
-                <h1 className="text-4xl md:text-5xl font-black text-[#2A2018] leading-tight mb-4">
+                <h1 className="text-4xl md:text-5xl font-black text-[#E5E5E5] leading-tight mb-4">
                     {content?.headline || title}
                 </h1>
                 <motion.div
-                    className="w-24 h-1 bg-gradient-to-r from-[#C17C64] to-[#D4A574] rounded-full mx-auto mb-4"
+                    className="w-24 h-1 bg-gradient-to-r from-[#E50914] to-[#E87C03] rounded-full mx-auto mb-4"
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
                     transition={{ delay: 0.4, duration: 0.5 }}
                 />
                 {content?.tagline && (
                     <motion.p
-                        className="text-lg md:text-xl text-[#6B5E52] font-medium"
+                        className="text-lg md:text-xl text-[#B3B3B3] font-medium"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.6 }}
@@ -42,7 +42,7 @@ function BulletsSlide({ content, title }) {
     return (
         <div className="flex flex-col justify-center h-full px-10 md:px-16">
             <motion.h2
-                className="text-2xl md:text-3xl font-bold text-[#C17C64] mb-8"
+                className="text-2xl md:text-3xl font-bold text-[#E50914] mb-8"
                 initial={{ x: -40, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5 }}
@@ -58,10 +58,10 @@ function BulletsSlide({ content, title }) {
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.3 + i * 0.4, duration: 0.4 }}
                     >
-                        <div className="size-8 rounded-lg bg-gradient-to-br from-[#C17C64] to-[#D4A574] flex items-center justify-center shrink-0 mt-0.5 shadow-md">
+                        <div className="size-8 rounded-lg bg-gradient-to-br from-[#E50914] to-[#E87C03] flex items-center justify-center shrink-0 mt-0.5 shadow-md">
                             <span className="text-white text-sm font-bold">{i + 1}</span>
                         </div>
-                        <p className="text-base md:text-lg text-[#2A2018] font-medium leading-relaxed">{point}</p>
+                        <p className="text-base md:text-lg text-[#E5E5E5] font-medium leading-relaxed">{point}</p>
                     </motion.div>
                 ))}
             </div>
@@ -75,9 +75,9 @@ function DiagramSlide({ content, title }) {
     const layout = content?.layout || 'flow';
 
     const colorMap = {
-        primary: { bg: '#C17C64', text: '#FFFFFF' },
-        secondary: { bg: '#D4A574', text: '#FFFFFF' },
-        accent: { bg: '#8FA395', text: '#FFFFFF' },
+        primary: { bg: '#E50914', text: '#FFFFFF' },
+        secondary: { bg: '#E87C03', text: '#FFFFFF' },
+        accent: { bg: '#46D369', text: '#FFFFFF' },
     };
 
     // Calculate node positions based on layout
@@ -101,7 +101,7 @@ function DiagramSlide({ content, title }) {
     return (
         <div className="flex flex-col justify-center h-full px-10 md:px-16">
             <motion.h2
-                className="text-2xl md:text-3xl font-bold text-[#C17C64] mb-6"
+                className="text-2xl md:text-3xl font-bold text-[#E50914] mb-6"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5 }}
@@ -119,7 +119,7 @@ function DiagramSlide({ content, title }) {
                                 key={i}
                                 x1={`${from.x}%`} y1={`${from.y}%`}
                                 x2={`${to.x}%`} y2={`${to.y}%`}
-                                stroke="#D4A574"
+                                stroke="#E87C03"
                                 strokeWidth="2.5"
                                 strokeDasharray="6,3"
                                 initial={{ pathLength: 0, opacity: 0 }}
@@ -135,7 +135,7 @@ function DiagramSlide({ content, title }) {
                             <motion.circle
                                 key={`arrow-${i}`}
                                 cx={`${to.x}%`} cy={`${to.y}%`} r="4"
-                                fill="#D4A574"
+                                fill="#E87C03"
                                 initial={{ opacity: 0, scale: 0 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.8 + i * 0.2 }}
@@ -183,7 +183,7 @@ function CodeSlide({ content, title }) {
     return (
         <div className="flex flex-col justify-center h-full px-10 md:px-16">
             <motion.h2
-                className="text-2xl md:text-3xl font-bold text-[#C17C64] mb-5"
+                className="text-2xl md:text-3xl font-bold text-[#E50914] mb-5"
                 initial={{ x: -30, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.5 }}
@@ -191,30 +191,30 @@ function CodeSlide({ content, title }) {
                 {title}
             </motion.h2>
             <motion.div
-                className="rounded-2xl overflow-hidden shadow-xl border border-[#D8CCBE]"
+                className="rounded-2xl overflow-hidden shadow-xl border border-[#333333]"
                 initial={{ y: 30, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
             >
                 {/* Terminal header */}
-                <div className="bg-[#2A2018] px-4 py-2.5 flex items-center gap-2">
-                    <div className="size-3 rounded-full bg-[#C17C64]" />
-                    <div className="size-3 rounded-full bg-[#D4A574]" />
-                    <div className="size-3 rounded-full bg-[#8FA395]" />
-                    <span className="ml-3 text-[#9A8E82] text-xs font-mono">{content?.language || 'code'}</span>
+                <div className="bg-[#1A1A1A] px-4 py-2.5 flex items-center gap-2">
+                    <div className="size-3 rounded-full bg-[#E50914]" />
+                    <div className="size-3 rounded-full bg-[#E87C03]" />
+                    <div className="size-3 rounded-full bg-[#46D369]" />
+                    <span className="ml-3 text-[#808080] text-xs font-mono">{content?.language || 'code'}</span>
                 </div>
-                <div className="bg-[#332B22] p-5 overflow-x-auto">
+                <div className="bg-[#0A0A0A] p-5 overflow-x-auto">
                     <pre className="text-sm md:text-base font-mono leading-relaxed">
                         {lines.map((line, i) => (
                             <motion.div
                                 key={i}
-                                className={`px-2 -mx-2 rounded ${highlightLines.includes(i + 1) ? 'bg-[#C17C64]/15 border-l-2 border-[#C17C64]' : ''}`}
+                                className={`px-2 -mx-2 rounded ${highlightLines.includes(i + 1) ? 'bg-[#E50914]/15 border-l-2 border-[#E50914]' : ''}`}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.5 + i * 0.15, duration: 0.3 }}
                             >
-                                <span className="text-[#6B5E52] mr-4 select-none text-xs">{String(i + 1).padStart(2)}</span>
-                                <span className="text-[#F5EDE4]">{line}</span>
+                                <span className="text-[#B3B3B3] mr-4 select-none text-xs">{String(i + 1).padStart(2)}</span>
+                                <span className="text-[#141414]">{line}</span>
                             </motion.div>
                         ))}
                     </pre>
@@ -247,7 +247,7 @@ function ComparisonSlide({ content, title }) {
                         transition={{ delay: delay + 0.2 + i * 0.2 }}
                     >
                         <div className="size-2 rounded-full mt-2 shrink-0" style={{ backgroundColor: color }} />
-                        <p className="text-sm md:text-base text-[#2A2018]">{point}</p>
+                        <p className="text-sm md:text-base text-[#E5E5E5]">{point}</p>
                     </motion.div>
                 ))}
             </div>
@@ -257,18 +257,18 @@ function ComparisonSlide({ content, title }) {
     return (
         <div className="flex flex-col justify-center h-full px-10 md:px-16">
             <motion.h2
-                className="text-2xl md:text-3xl font-bold text-[#C17C64] mb-6"
+                className="text-2xl md:text-3xl font-bold text-[#E50914] mb-6"
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
             >
                 {title}
             </motion.h2>
             <div className="flex gap-5">
-                {renderSide(left, '#C17C64', 0.3)}
+                {renderSide(left, '#E50914', 0.3)}
                 <div className="flex items-center">
-                    <div className="text-2xl font-bold text-[#D4A574]">vs</div>
+                    <div className="text-2xl font-bold text-[#E87C03]">vs</div>
                 </div>
-                {renderSide(right, '#8FA395', 0.5)}
+                {renderSide(right, '#46D369', 0.5)}
             </div>
         </div>
     );
@@ -279,7 +279,7 @@ function SummarySlide({ content, title }) {
     return (
         <div className="flex flex-col items-center justify-center h-full px-10 md:px-16 text-center">
             <motion.div
-                className="size-16 rounded-full bg-gradient-to-br from-[#8FA395] to-[#8FA395]/70 flex items-center justify-center mb-6 shadow-lg"
+                className="size-16 rounded-full bg-gradient-to-br from-[#46D369] to-[#46D369]/70 flex items-center justify-center mb-6 shadow-lg"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: 'spring', stiffness: 200 }}
@@ -287,7 +287,7 @@ function SummarySlide({ content, title }) {
                 <span className="material-symbols-outlined text-white" style={{ fontSize: 32 }}>check_circle</span>
             </motion.div>
             <motion.h2
-                className="text-2xl md:text-3xl font-bold text-[#2A2018] mb-8"
+                className="text-2xl md:text-3xl font-bold text-[#E5E5E5] mb-8"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -298,15 +298,15 @@ function SummarySlide({ content, title }) {
                 {points.map((point, i) => (
                     <motion.div
                         key={i}
-                        className="flex items-center gap-3 bg-white/60 rounded-xl px-5 py-3 shadow-sm border border-[#D8CCBE]"
+                        className="flex items-center gap-3 bg-[#1E1E1E]/60 rounded-xl px-5 py-3 shadow-sm border border-[#333333]"
                         initial={{ x: i % 2 === 0 ? -40 : 40, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.4 + i * 0.3, duration: 0.4 }}
                     >
-                        <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>
+                        <span className="material-symbols-outlined text-[#46D369]" style={{ fontSize: 20, fontVariationSettings: "'FILL' 1" }}>
                             verified
                         </span>
-                        <p className="text-sm md:text-base text-[#2A2018] font-medium text-left">{point}</p>
+                        <p className="text-sm md:text-base text-[#E5E5E5] font-medium text-left">{point}</p>
                     </motion.div>
                 ))}
             </div>
@@ -326,7 +326,7 @@ function KeypointSlide({ content, title }) {
     return (
         <div className="flex flex-col items-center justify-center h-full px-10 md:px-16 text-center">
             <motion.div
-                className="size-20 rounded-2xl bg-gradient-to-br from-[#D4A574] to-[#C17C64] flex items-center justify-center mb-8 shadow-xl"
+                className="size-20 rounded-2xl bg-gradient-to-br from-[#E87C03] to-[#E50914] flex items-center justify-center mb-8 shadow-xl"
                 initial={{ rotate: -180, scale: 0 }}
                 animate={{ rotate: 0, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 150, damping: 15 }}
@@ -336,7 +336,7 @@ function KeypointSlide({ content, title }) {
                 </span>
             </motion.div>
             <motion.h2
-                className="text-xl md:text-2xl font-bold text-[#C17C64] mb-3"
+                className="text-xl md:text-2xl font-bold text-[#E50914] mb-3"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
@@ -344,7 +344,7 @@ function KeypointSlide({ content, title }) {
                 {title}
             </motion.h2>
             <motion.p
-                className="text-2xl md:text-3xl font-black text-[#2A2018] mb-4 max-w-md leading-tight"
+                className="text-2xl md:text-3xl font-black text-[#E5E5E5] mb-4 max-w-md leading-tight"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
@@ -353,7 +353,7 @@ function KeypointSlide({ content, title }) {
             </motion.p>
             {content?.detail && (
                 <motion.p
-                    className="text-base md:text-lg text-[#6B5E52] max-w-lg"
+                    className="text-base md:text-lg text-[#B3B3B3] max-w-lg"
                     initial={{ y: 15, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.7 }}
@@ -550,31 +550,31 @@ export default function PresentationPlayer({ slides = [], conceptName = '', onCo
     const SlideRenderer = SLIDE_RENDERERS[slide?.type] || BulletsSlide;
 
     return (
-        <div className="rounded-2xl overflow-hidden border border-[#D8CCBE] shadow-lg bg-white">
+        <div className="rounded-2xl overflow-hidden border border-[#333333] shadow-lg bg-[#1E1E1E]">
             {/* ── Slide Area ── */}
             <div
                 className="aspect-video relative overflow-hidden cursor-pointer"
-                style={{ backgroundColor: '#F5EDE4' }}
+                style={{ backgroundColor: '#141414' }}
                 onClick={togglePlay}
             >
                 {/* Subtle background pattern */}
                 <div className="absolute inset-0 opacity-[0.03]"
                     style={{
-                        backgroundImage: 'radial-gradient(circle at 20% 50%, #C17C64 1px, transparent 1px), radial-gradient(circle at 80% 50%, #D4A574 1px, transparent 1px)',
+                        backgroundImage: 'radial-gradient(circle at 20% 50%, #E50914 1px, transparent 1px), radial-gradient(circle at 80% 50%, #E87C03 1px, transparent 1px)',
                         backgroundSize: '60px 60px',
                     }}
                 />
 
                 {/* Slide number badge */}
                 <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-lg bg-[#2A2018]/8 text-[10px] font-bold text-[#6B5E52] tracking-wider">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#E5E5E5]/8 text-[10px] font-bold text-[#B3B3B3] tracking-wider">
                         {currentSlide + 1} / {slides.length}
                     </span>
                 </div>
 
-                {/* PrimeLearn watermark */}
+                {/* LearnFlix watermark */}
                 <div className="absolute top-4 left-4 z-20">
-                    <span className="text-[10px] font-black text-[#C17C64]/30 uppercase tracking-[0.2em]">PrimeLearn</span>
+                    <span className="text-[10px] font-black text-[#E50914]/30 uppercase tracking-[0.2em]">LearnFlix</span>
                 </div>
 
                 {/* Animated slide content */}
@@ -603,7 +603,7 @@ export default function PresentationPlayer({ slides = [], conceptName = '', onCo
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.3 }}
                     >
-                        <div className="bg-gradient-to-t from-[#2A2018]/70 via-[#2A2018]/40 to-transparent pt-10 pb-4 px-8">
+                        <div className="bg-gradient-to-t from-[#141414]/70 via-[#141414]/40 to-transparent pt-10 pb-4 px-8">
                             <p className="text-white text-sm md:text-base font-medium text-center leading-relaxed drop-shadow-lg max-w-2xl mx-auto">
                                 {slide.narration}
                             </p>
@@ -618,12 +618,12 @@ export default function PresentationPlayer({ slides = [], conceptName = '', onCo
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-[#2A2018]/20 flex items-center justify-center z-30"
+                            className="absolute inset-0 bg-[#141414]/20 flex items-center justify-center z-30"
                         >
                             <motion.div
                                 initial={{ scale: 0.8 }}
                                 animate={{ scale: 1 }}
-                                className="size-16 rounded-full bg-[#C17C64]/90 backdrop-blur-sm flex items-center justify-center shadow-xl"
+                                className="size-16 rounded-full bg-[#E50914]/90 backdrop-blur-sm flex items-center justify-center shadow-xl"
                             >
                                 <span className="material-symbols-outlined text-white" style={{ fontSize: 32 }}>play_arrow</span>
                             </motion.div>
@@ -633,12 +633,12 @@ export default function PresentationPlayer({ slides = [], conceptName = '', onCo
             </div>
 
             {/* ── Control Bar ── */}
-            <div className="bg-[#F5EDE4] border-t border-[#D8CCBE]">
+            <div className="bg-[#141414] border-t border-[#333333]">
                 {/* Overall progress bar */}
                 <div className="px-4 pt-2">
-                    <div className="w-full h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden">
                         <motion.div
-                            className="h-full rounded-full bg-gradient-to-r from-[#C17C64] to-[#D4A574]"
+                            className="h-full rounded-full bg-gradient-to-r from-[#E50914] to-[#E87C03]"
                             animate={{ width: `${overallProgress * 100}%` }}
                             transition={{ duration: 0.1 }}
                         />
@@ -648,18 +648,18 @@ export default function PresentationPlayer({ slides = [], conceptName = '', onCo
                 {/* Controls */}
                 <div className="flex items-center justify-between px-4 py-2.5">
                     <div className="flex items-center gap-3">
-                        <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="text-[#2A2018] hover:text-[#C17C64] transition-colors">
+                        <button onClick={(e) => { e.stopPropagation(); togglePlay(); }} className="text-[#E5E5E5] hover:text-[#E50914] transition-colors">
                             <span className="material-symbols-outlined" style={{ fontSize: 22 }}>
                                 {isPlaying ? 'pause' : 'play_arrow'}
                             </span>
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); goToPrev(); }} className="text-[#6B5E52] hover:text-[#C17C64] transition-colors disabled:opacity-30" disabled={currentSlide === 0}>
+                        <button onClick={(e) => { e.stopPropagation(); goToPrev(); }} className="text-[#B3B3B3] hover:text-[#E50914] transition-colors disabled:opacity-30" disabled={currentSlide === 0}>
                             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>skip_previous</span>
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); goToNext(); }} className="text-[#6B5E52] hover:text-[#C17C64] transition-colors disabled:opacity-30" disabled={isLastSlide && !isPlaying}>
+                        <button onClick={(e) => { e.stopPropagation(); goToNext(); }} className="text-[#B3B3B3] hover:text-[#E50914] transition-colors disabled:opacity-30" disabled={isLastSlide && !isPlaying}>
                             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>skip_next</span>
                         </button>
-                        <span className="text-[11px] font-mono text-[#6B5E52]">
+                        <span className="text-[11px] font-mono text-[#B3B3B3]">
                             {Math.floor(overallProgress * totalDuration / 60)}:{String(Math.floor(overallProgress * totalDuration) % 60).padStart(2, '0')} / {Math.floor(totalDuration / 60)}:{String(Math.floor(totalDuration) % 60).padStart(2, '0')}
                         </span>
                     </div>
@@ -672,15 +672,15 @@ export default function PresentationPlayer({ slides = [], conceptName = '', onCo
                                     key={i}
                                     onClick={(e) => { e.stopPropagation(); goToSlide(i); }}
                                     className={`transition-all rounded-full ${
-                                        i === currentSlide ? 'w-5 h-2 bg-[#C17C64]' :
-                                        i < currentSlide ? 'size-2 bg-[#8FA395]' : 'size-2 bg-[#D8CCBE]'
+                                        i === currentSlide ? 'w-5 h-2 bg-[#E50914]' :
+                                        i < currentSlide ? 'size-2 bg-[#46D369]' : 'size-2 bg-[#333333]'
                                     }`}
                                     title={`Slide ${i + 1}`}
                                 />
                             ))}
                         </div>
 
-                        <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-[#C17C64] uppercase tracking-wider bg-[#C17C64]/8 border border-[#C17C64]/15">
+                        <span className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold text-[#E50914] uppercase tracking-wider bg-[#E50914]/8 border border-[#E50914]/15">
                             <span className="material-symbols-outlined" style={{ fontSize: 12 }}>auto_awesome</span>
                             AI Presentation
                         </span>

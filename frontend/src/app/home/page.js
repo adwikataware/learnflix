@@ -1,118 +1,197 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
+import ShareCard from '@/components/ShareCard';
 import AppLayout from '@/components/layout/AppLayout';
-import { getConstellation, getLearnerId, getLearnerName, getDashboard } from '@/lib/api';
+import { getLearnerId, getLearnerName, getDashboard, getConstellation, getActiveProfile } from '@/lib/api';
 
-// ─── Theme-matched node palette ──────────────────────────────────────────────
-const NODE_COLORS = {
-    mastered: '#8FA395',   // sage green
-    active: '#C17C64',     // terracotta
-    locked: '#3D3228',     // dark brown
+const TRENDING_NEWS = {
+    'Computer Science': [
+        { title: 'GPT-5 Released: What It Means for Developers', tag: 'AI', image: 'smart_toy', match: 95 },
+        { title: 'Rust Overtakes C++ in Systems Programming', tag: 'Languages', image: 'code', match: 88 },
+        { title: 'WebAssembly 3.0: The Future of Browser Computing', tag: 'Web', image: 'language', match: 82 },
+    ],
+    'Data Science': [
+        { title: 'OpenAI Launches Data Analysis Agents', tag: 'AI', image: 'smart_toy', match: 93 },
+        { title: 'Python 3.14 Brings Native DataFrame Support', tag: 'Tools', image: 'code', match: 87 },
+        { title: 'Real-Time ML Inference at Scale', tag: 'ML Ops', image: 'cloud', match: 79 },
+    ],
+    'Finance & Business': [
+        { title: 'RBI Launches Digital Rupee 2.0', tag: 'FinTech', image: 'currency_rupee', match: 91 },
+        { title: 'AI-Powered Trading Algorithms Reshape Markets', tag: 'Trading', image: 'trending_up', match: 85 },
+        { title: 'India Becomes World\'s 3rd Largest Economy', tag: 'Economy', image: 'public', match: 78 },
+    ],
+    'default': [
+        { title: 'AI Transforms Education: Personalized Learning', tag: 'EdTech', image: 'school', match: 90 },
+        { title: 'India\'s Skill India 2.0 Trains 10M', tag: 'India', image: 'public', match: 84 },
+        { title: 'Remote Learning Platforms See 300% Growth', tag: 'Trends', image: 'trending_up', match: 76 },
+    ],
 };
 
-// ─── Layout nodes horizontally with gentle wave ─────────────────────────────
-function layoutNodes(nodes) {
-    const startX = 80;
-    const stepX = 160; // spacing between nodes
-    const centerY = 130;
-    const amplitude = 30; // gentle wave up/down
+const COURSE_ICONS = [
+    'code', 'database', 'terminal', 'hub', 'memory', 'analytics', 'cloud',
+    'language', 'smart_toy', 'calculate', 'science', 'security', 'account_tree',
+    'data_object', 'dns', 'model_training', 'neurology', 'query_stats',
+];
 
-    return nodes.map((n, i) => ({
-        ...n,
-        cx: startX + i * stepX,
-        cy: centerY + Math.sin(i * 0.8) * amplitude,
-        nodeIdx: i,
-    }));
-}
+const COURSE_COLORS = ['#E50914', '#E87C03', '#46D369', '#5DADE2', '#AF7AC5', '#F4D03F', '#E50914', '#E87C03', '#46D369', '#5DADE2', '#AF7AC5', '#F4D03F', '#E50914', '#E87C03'];
 
 function ScrollReveal({ children, className = '', delay = 0 }) {
     const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: "-80px" });
-
+    const isInView = useInView(ref, { once: true, margin: "-60px" });
     return (
-        <motion.div
-            ref={ref}
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={isInView ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 40, scale: 0.95 }}
-            transition={{ duration: 0.6, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className={className}
-        >
+        <motion.div ref={ref}
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+            transition={{ duration: 0.5, delay, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className={className}>
             {children}
         </motion.div>
     );
 }
 
+// Netflix-style horizontal row with title
+function CourseRow({ title, icon, courses, router, startIdx = 0 }) {
+    const scrollRef = useRef(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const checkScroll = () => {
+        if (!scrollRef.current) return;
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        setCanScrollLeft(scrollLeft > 10);
+        setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    };
+
+    const scroll = (dir) => {
+        scrollRef.current?.scrollBy({ left: dir * 400, behavior: 'smooth' });
+    };
+
+    return (
+        <div className="relative group/row">
+            <div className="flex items-center justify-between mb-3 px-4 lg:px-12">
+                <h3 className="text-base lg:text-lg font-bold text-white flex items-center gap-2">
+                    {icon && <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>{icon}</span>}
+                    {title}
+                </h3>
+                <button className="text-[11px] text-[#808080] hover:text-white transition-colors font-semibold flex items-center gap-1">
+                    Explore All <span className="material-symbols-outlined" style={{ fontSize: 14 }}>chevron_right</span>
+                </button>
+            </div>
+
+            <div className="relative">
+                {/* Left arrow */}
+                {canScrollLeft && (
+                    <button onClick={() => scroll(-1)}
+                        className="absolute left-0 top-0 bottom-0 z-10 w-12 bg-gradient-to-r from-[#141414] to-transparent flex items-center justify-start pl-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                        <span className="material-symbols-outlined text-white text-3xl">chevron_left</span>
+                    </button>
+                )}
+                {/* Right arrow */}
+                {canScrollRight && (
+                    <button onClick={() => scroll(1)}
+                        className="absolute right-0 top-0 bottom-0 z-10 w-12 bg-gradient-to-l from-[#141414] to-transparent flex items-center justify-end pr-1 opacity-0 group-hover/row:opacity-100 transition-opacity">
+                        <span className="material-symbols-outlined text-white text-3xl">chevron_right</span>
+                    </button>
+                )}
+
+                <div ref={scrollRef} onScroll={checkScroll}
+                    className="flex gap-2 overflow-x-auto hide-scrollbar px-4 lg:px-12 pb-2">
+                    {courses.map((course, idx) => {
+                        const color = COURSE_COLORS[(startIdx + idx) % COURSE_COLORS.length];
+                        const iconName = COURSE_ICONS[(startIdx + idx) % COURSE_ICONS.length];
+                        return (
+                            <motion.div key={course.concept_id || idx}
+                                whileHover={{ scale: 1.08, zIndex: 20 }}
+                                transition={{ duration: 0.2 }}
+                                onClick={() => router.push(`/season/${course.concept_id}`)}
+                                className="flex-shrink-0 w-[200px] lg:w-[230px] rounded overflow-hidden cursor-pointer group/card relative"
+                                style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+
+                                <div className="aspect-[16/10] relative bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]">
+                                    <div className="absolute inset-0 opacity-20" style={{ background: `linear-gradient(135deg, ${color}40, transparent 70%)` }} />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <span className="material-symbols-outlined text-white/15 group-hover/card:text-white/35 transition-all duration-300"
+                                            style={{ fontSize: 48, fontVariationSettings: "'FILL' 1" }}>{iconName}</span>
+                                    </div>
+
+                                    {/* Hover overlay */}
+                                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-all duration-200">
+                                        <div className="size-11 rounded-full bg-white/90 flex items-center justify-center">
+                                            <span className="material-symbols-outlined text-black" style={{ fontSize: 24, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Progress bar */}
+                                    {course.mastery > 0 && (
+                                        <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[#333]">
+                                            <div className="h-full bg-[#E50914]" style={{ width: `${Math.round(course.mastery * 100)}%` }} />
+                                        </div>
+                                    )}
+
+                                    {/* Maturity / difficulty badge */}
+                                    <div className="absolute bottom-2 right-2 bg-[#333]/80 text-white/70 text-[9px] font-bold px-1.5 py-0.5 rounded border border-white/10">
+                                        {idx < 3 ? 'Beginner' : idx < 7 ? 'Intermediate' : 'Advanced'}
+                                    </div>
+                                </div>
+
+                                <div className="bg-[#181818] px-3 py-2.5">
+                                    <p className="text-white/90 text-[13px] font-semibold truncate group-hover/card:text-white">{course.label}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        {course.mastery > 0 && (
+                                            <span className="text-[#46D369] text-[10px] font-bold">{Math.round(course.mastery * 100)}%</span>
+                                        )}
+                                        <span className="text-[#808080] text-[10px]">
+                                            {course.status === 'mastered' ? 'Completed' : course.mastery > 0 ? 'In Progress' : 'New'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function HomePage() {
     const router = useRouter();
-    const [nodes, setNodes] = useState([]);
-    const [edges, setEdges] = useState([]);
-    const [selectedNode, setSelectedNode] = useState(null);
+    const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [hoveredNode, setHoveredNode] = useState(null);
-    const [learnerName, setLearnerName] = useState('');
+    const [learnerName, setLN] = useState('');
+    const [specialization, setSpecialization] = useState('default');
     const [stats, setStats] = useState({ xp: 0, streak: 0, mastered: 0, level: 1 });
+    const [bannerIndex, setBannerIndex] = useState(0);
+    const [showShare, setShowShare] = useState(false);
 
     useEffect(() => {
-        const learnerId = getLearnerId();
-        if (!learnerId) { router.push('/onboarding'); return; }
-        setLearnerName(getLearnerName());
+        const lid = getLearnerId();
+        if (!lid) { router.push('/profiles'); return; }
+        setLN(getLearnerName());
+        const ap = getActiveProfile();
+        if (ap?.specialization) setSpecialization(ap.specialization);
 
         async function fetchData() {
-            const [constRes, dashRes] = await Promise.all([
-                getConstellation(learnerId),
-                getDashboard(learnerId),
-            ]);
-
+            const [constRes, dashRes] = await Promise.all([getConstellation(lid), getDashboard(lid)]);
             if (!constRes.error && constRes.data?.nodes?.length > 0) {
                 const raw = constRes.data.nodes.map((n, i) => ({
                     concept_id: n.concept_id || n.id,
-                    label: n.label || n.concept_id || `Concept ${i + 1}`,
-                    x: n.x,
-                    y: n.y,
+                    label: n.label || n.concept_id || `Course ${i + 1}`,
                     apiStatus: n.status || n.state || 'locked',
                     mastery: n.mastery ?? n.p_known ?? 0,
-                    prerequisites: n.prerequisites || [],
                 }));
-
-                // ── Game-like sequential unlock logic ──
-                // Node is mastered if mastery >= 0.8
-                // Node is active if it's the first non-mastered node OR prev node is mastered
-                // Everything else is locked
-                let foundActive = false;
-                const withStatus = raw.map((node, i) => {
-                    const isMastered = node.mastery >= 0.8 || node.apiStatus === 'mastered';
-                    if (isMastered) {
-                        return { ...node, status: 'mastered', mastery: node.mastery || 1 };
-                    }
-                    // First node is always active if not mastered
-                    if (i === 0 && !foundActive) {
-                        foundActive = true;
-                        return { ...node, status: 'active', mastery: node.mastery };
-                    }
-                    // Active if previous is mastered and we haven't assigned active yet
-                    const prevMastered = raw[i - 1] && (raw[i - 1].mastery >= 0.8 || raw[i - 1].apiStatus === 'mastered');
-                    if (prevMastered && !foundActive) {
-                        foundActive = true;
-                        return { ...node, status: 'active', mastery: node.mastery };
-                    }
-                    // Everything else is locked
-                    return { ...node, status: 'locked', mastery: 0 };
+                const withStatus = raw.map(node => {
+                    if (node.mastery >= 0.8 || node.apiStatus === 'mastered') return { ...node, status: 'mastered', mastery: node.mastery || 1 };
+                    return { ...node, status: 'active' };
                 });
-
-                // Layout nodes properly
-                const laid = layoutNodes(withStatus);
-                setNodes(laid);
-
-                const apiEdges = (constRes.data.edges || constRes.data.links || []).map(e => ({
-                    source: e.source,
-                    target: e.target,
-                }));
-                setEdges(apiEdges);
+                // Also load custom courses from localStorage
+                const customKey = `learnflix_custom_courses_${lid}`;
+                const customCourses = JSON.parse(localStorage.getItem(customKey) || '[]');
+                setCourses([...withStatus, ...customCourses]);
             }
-
             if (!dashRes.error && dashRes.data) {
                 const d = dashRes.data;
                 setStats({
@@ -122,34 +201,28 @@ export default function HomePage() {
                     level: d.stats?.level ?? d.profile?.level ?? 1,
                 });
             }
-
             setLoading(false);
         }
         fetchData();
     }, [router]);
 
-    const activeNode = nodes.find(n => n.status === 'active');
-    const masteredCount = nodes.filter(n => n.status === 'mastered').length;
-    const activeCount = nodes.filter(n => n.status === 'active').length;
-    const lockedCount = nodes.filter(n => n.status === 'locked').length;
-    const totalProgress = nodes.length > 0 ? Math.round((masteredCount / nodes.length) * 100) : 0;
+    const newsItems = TRENDING_NEWS[specialization] || TRENDING_NEWS['default'];
+    useEffect(() => {
+        const i = setInterval(() => setBannerIndex(p => (p + 1) % newsItems.length), 5000);
+        return () => clearInterval(i);
+    }, [newsItems.length]);
 
-    const handleNodeClick = useCallback((node) => {
-        if (node.status === 'locked') {
-            setSelectedNode(prev => prev?.concept_id === node.concept_id ? null : node);
-        } else {
-            router.push(`/season/${node.concept_id}`);
-        }
-    }, [router]);
+    const masteredCount = courses.filter(n => n.status === 'mastered').length;
+    const totalProgress = courses.length > 0 ? Math.round((masteredCount / courses.length) * 100) : 0;
+    const activeCourse = courses.find(n => n.status === 'active' && n.mastery > 0) || courses[0];
+    const inProgress = courses.filter(c => c.mastery > 0 && c.status !== 'mastered');
+    const notStarted = courses.filter(c => c.mastery === 0);
 
     if (loading) {
         return (
             <AppLayout>
                 <div className="h-[80vh] flex items-center justify-center">
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                        <span className="text-[#6B5E52] text-sm">Loading your learning universe...</span>
-                    </div>
+                    <div className="w-10 h-10 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
                 </div>
             </AppLayout>
         );
@@ -157,524 +230,240 @@ export default function HomePage() {
 
     return (
         <AppLayout>
-            <div className="flex flex-col min-h-[calc(100vh-64px)] overflow-x-hidden w-full max-w-full">
+            <div className="flex flex-col min-h-[calc(100vh-64px)] overflow-x-hidden w-full">
 
-                {/* ═══ Welcome Banner ═══ */}
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mx-4 lg:mx-8 mt-5"
-                >
-                    <h1 className="text-2xl lg:text-3xl font-extrabold text-[#2A2018] font-[Manrope]">
-                        Welcome back, <span className="text-primary">{learnerName.split(' ')[0] || 'Learner'}</span>
-                    </h1>
-                    <p className="text-[#6B5E52] text-sm mt-1">Your personalized learning constellation awaits.</p>
-                </motion.div>
+                {/* ═══ NETFLIX-STYLE HERO BANNER (Full width, cinematic) ═══ */}
+                <div className="relative w-full" style={{ minHeight: 420 }}>
+                    {/* Background animated visual — education-themed particles */}
+                    <div className="absolute inset-0 overflow-hidden">
+                        {/* Animated gradient blobs */}
+                        <motion.div className="absolute w-[500px] h-[500px] rounded-full"
+                            style={{ top: '-10%', right: '5%', background: 'radial-gradient(circle, rgba(229,9,20,0.08), transparent 70%)', filter: 'blur(60px)' }}
+                            animate={{ x: [0, 30, -20, 0], y: [0, -20, 15, 0], scale: [1, 1.1, 0.95, 1] }}
+                            transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }} />
+                        <motion.div className="absolute w-[400px] h-[400px] rounded-full"
+                            style={{ bottom: '5%', left: '20%', background: 'radial-gradient(circle, rgba(70,211,105,0.05), transparent 70%)', filter: 'blur(50px)' }}
+                            animate={{ x: [0, -25, 15, 0], y: [0, 20, -10, 0] }}
+                            transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut', delay: -5 }} />
 
-                {/* ═══ Quick Stats Row ═══ */}
-                <ScrollReveal className="mx-4 lg:mx-8 mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {[
-                        { icon: 'school', label: 'Mastered', value: masteredCount, color: '#8FA395' },
-                        { icon: 'trending_up', label: 'In Progress', value: activeCount, color: '#C17C64' },
-                        { icon: 'lock_open', label: 'To Unlock', value: lockedCount, color: '#64748b' },
-                        { icon: 'military_tech', label: 'Overall', value: `${totalProgress}%`, color: '#D4A574' },
-                    ].map((stat, i) => (
-                        <motion.div key={stat.label} whileHover={{ y: -3 }} className="bg-white border border-[#D8CCBE] rounded-xl px-4 py-3 flex items-center gap-3">
-                            <div className="size-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${stat.color}15` }}>
-                                <span className="material-symbols-outlined" style={{ fontSize: 20, color: stat.color, fontVariationSettings: "'FILL' 1" }}>{stat.icon}</span>
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold text-[#2A2018]">{stat.value}</p>
-                                <p className="text-[10px] uppercase tracking-wider text-[#9A8E82] font-bold">{stat.label}</p>
-                            </div>
+                        {/* Floating education icons */}
+                        {['code', 'school', 'science', 'calculate', 'terminal', 'psychology', 'analytics', 'hub'].map((ic, i) => (
+                            <motion.span key={ic}
+                                className="material-symbols-outlined text-white/[0.03] absolute select-none pointer-events-none"
+                                style={{ fontSize: 40 + i * 8, left: `${10 + i * 11}%`, top: `${15 + (i % 3) * 25}%`, fontVariationSettings: "'FILL' 1" }}
+                                animate={{ y: [0, -15, 5, -10, 0], rotate: [0, 3, -2, 1, 0] }}
+                                transition={{ duration: 12 + i * 2, repeat: Infinity, ease: 'easeInOut', delay: -i * 1.5 }}>
+                                {ic}
+                            </motion.span>
+                        ))}
+                    </div>
+
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0A]/60 via-[#141414]/80 to-[#141414]" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#141414] via-transparent to-transparent" />
+
+                    {/* Featured course icon (large, faded) */}
+                    {activeCourse && (
+                        <div className="absolute right-[10%] top-1/2 -translate-y-1/2 opacity-[0.04]">
+                            <span className="material-symbols-outlined text-white" style={{ fontSize: 300, fontVariationSettings: "'FILL' 1" }}>
+                                {COURSE_ICONS[0]}
+                            </span>
+                        </div>
+                    )}
+
+                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#141414] to-transparent z-10" />
+
+                    <div className="relative z-20 px-6 lg:px-12 pt-12 pb-16 max-w-4xl">
+                        {/* LearnFlix original badge */}
+                        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+                            className="flex items-center gap-2 mb-4">
+                            <span className="text-[#E50914] font-black text-sm tracking-tight">L</span>
+                            <span className="text-white/50 text-[11px] font-bold uppercase tracking-widest">LearnFlix Original</span>
                         </motion.div>
-                    ))}
-                </ScrollReveal>
 
-                {/* ═══ Continue Learning Banner ═══ */}
-                {activeNode && (
-                    <ScrollReveal className="mx-4 lg:mx-8 mt-4 rounded-2xl overflow-hidden relative border border-[#C17C64]/20" delay={0.1}>
-                        <div className="absolute inset-0 bg-gradient-to-r from-[#C17C64]/10 via-white to-[#C17C64]/5" />
-                        <div className="relative px-6 lg:px-8 py-5 flex items-center justify-between gap-6">
-                            <div className="flex items-center gap-5">
-                                <div className="w-14 h-14 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center flex-shrink-0">
-                                    <span className="material-symbols-outlined text-primary" style={{ fontSize: 28 }}>play_circle</span>
+                        {/* Trending news title */}
+                        {newsItems.map((news, idx) => (
+                            <motion.div key={idx}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: bannerIndex === idx ? 1 : 0, y: bannerIndex === idx ? 0 : 20 }}
+                                transition={{ duration: 0.6 }}
+                                className={bannerIndex === idx ? 'block' : 'hidden'}>
+                                <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white leading-[1.1] mb-4 max-w-3xl">
+                                    {news.title}
+                                </h1>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <span className="text-[#46D369] text-sm font-bold">{news.match}% Match</span>
+                                    <span className="text-white/50 text-sm">2026</span>
+                                    <span className="border border-white/30 text-white/60 text-[10px] px-1.5 py-0.5 rounded">{news.tag}</span>
+                                    <span className="text-white/50 text-sm">{specialization}</span>
                                 </div>
-                                <div>
-                                    <p className="text-xs uppercase tracking-widest text-primary font-bold mb-1">Continue Learning</p>
-                                    <h2 className="text-xl lg:text-2xl font-bold text-[#2A2018]">{activeNode.label}</h2>
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <div className="w-40 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
-                                            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${Math.round(activeNode.mastery * 100)}%` }} />
-                                        </div>
-                                        <span className="text-xs text-[#6B5E52]">{Math.round(activeNode.mastery * 100)}% mastery</span>
-                                    </div>
-                                </div>
+                                <p className="text-white/60 text-sm lg:text-base max-w-xl leading-relaxed mb-6">
+                                    Stay updated with the latest trends in your field. Explore curated courses designed by AI to match your learning goals.
+                                </p>
+                            </motion.div>
+                        ))}
+
+                        {/* Hero CTA buttons — Netflix style */}
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                            className="flex items-center gap-3">
+                            {activeCourse && (
+                                <button onClick={() => router.push(`/season/${activeCourse.concept_id}`)}
+                                    className="flex items-center gap-2 bg-white text-black font-bold text-base px-7 py-3 rounded hover:bg-white/85 transition-all">
+                                    <span className="material-symbols-outlined" style={{ fontSize: 24, fontVariationSettings: "'FILL' 1" }}>play_arrow</span>
+                                    {inProgress.length > 0 ? 'Resume' : 'Play'}
+                                </button>
+                            )}
+                            <button onClick={() => router.push('/dashboard')}
+                                className="flex items-center gap-2 bg-[#6D6D6E]/70 text-white font-bold text-base px-7 py-3 rounded hover:bg-[#6D6D6E] transition-all">
+                                <span className="material-symbols-outlined" style={{ fontSize: 22 }}>info</span>
+                                My Progress
+                            </button>
+                        </motion.div>
+
+                        {/* Banner dots */}
+                        <div className="flex gap-2 mt-6">
+                            {newsItems.map((_, idx) => (
+                                <button key={idx} onClick={() => setBannerIndex(idx)}
+                                    className={`h-[3px] rounded-full transition-all duration-500 ${bannerIndex === idx ? 'w-6 bg-white' : 'w-3 bg-white/30'}`} />
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                {/* ═══ Stats strip (compact, below hero) ═══ */}
+                <ScrollReveal className="px-4 lg:px-12 -mt-6 mb-6 relative z-20">
+                    <div className="flex items-center gap-6 bg-[#1A1A1A]/80 backdrop-blur-md border border-[#2E2E2E] rounded-lg px-6 py-3">
+                        {[
+                            { icon: 'school', label: 'Mastered', value: masteredCount, color: '#46D369' },
+                            { icon: 'local_fire_department', label: 'Streak', value: `${stats.streak}d`, color: '#E87C03' },
+                            { icon: 'star', label: 'XP', value: stats.xp, color: '#E50914' },
+                            { icon: 'military_tech', label: 'Progress', value: `${totalProgress}%`, color: '#5DADE2' },
+                        ].map((s, i) => (
+                            <div key={s.label} className="flex items-center gap-2">
+                                <span className="material-symbols-outlined" style={{ fontSize: 18, color: s.color, fontVariationSettings: "'FILL' 1" }}>{s.icon}</span>
+                                <span className="text-white font-bold text-sm">{s.value}</span>
+                                <span className="text-[#808080] text-[10px] uppercase tracking-wider font-bold hidden sm:inline">{s.label}</span>
+                                {i < 3 && <div className="w-px h-4 bg-[#333] ml-4 hidden sm:block" />}
                             </div>
-                            <button
-                                onClick={() => router.push(`/season/${activeNode.concept_id}`)}
-                                className="flex items-center gap-2 bg-accent text-white font-bold text-sm px-6 py-3 rounded-lg transition-all hover:brightness-110 gold-glow flex-shrink-0"
-                            >
-                                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>play_arrow</span>
-                                Resume
+                        ))}
+                        <div className="ml-auto">
+                            <button onClick={() => router.push('/profiles')}
+                                className="text-[11px] text-[#808080] hover:text-white transition-colors flex items-center gap-1">
+                                <span className="material-symbols-outlined" style={{ fontSize: 14 }}>swap_horiz</span>
+                                Switch
                             </button>
                         </div>
+                    </div>
+                </ScrollReveal>
+
+                {/* ═══ Continue Watching Row ═══ */}
+                {inProgress.length > 0 && (
+                    <ScrollReveal className="mb-6" delay={0.05}>
+                        <CourseRow title="Continue Watching" icon="history" courses={inProgress} router={router} startIdx={0} />
                     </ScrollReveal>
                 )}
 
-                {/* ═══ THE ROADMAP ═══ */}
-                <ScrollReveal className="mx-4 lg:mx-8 mt-6" delay={0.1}>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-bold text-[#2A2018] flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[#6B5E52]" style={{ fontSize: 24, fontVariationSettings: "'FILL' 1" }}>route</span>
-                            Your Learning Path
-                        </h3>
-                        <div className="hidden sm:flex items-center gap-5">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#8FA395]" />
-                                <span className="text-xs text-[#6B5E52]">Mastered</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#F5EDE4] border-2 border-[#6B5E52]" />
-                                <span className="text-xs text-[#6B5E52]">Current</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-[#3D3228] border border-[#6B5E52]/30" />
-                                <span className="text-xs text-[#6B5E52]">Locked</span>
-                            </div>
+                {/* ═══ Top 10 in Your Field ═══ */}
+                {courses.length > 0 && (
+                    <ScrollReveal className="mb-6" delay={0.1}>
+                        <div className="px-4 lg:px-12 mb-3">
+                            <h3 className="text-base lg:text-lg font-bold text-white flex items-center gap-2">
+                                <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+                                Top {Math.min(10, courses.length)} in {specialization} Today
+                            </h3>
                         </div>
-                    </div>
-
-                    <div
-                        className="relative rounded-2xl border overflow-x-auto overflow-y-hidden"
-                        style={{
-                            background: '#1a1410',
-                            borderColor: '#2A2018',
-                        }}
-                    >
-                        {/* Empty state */}
-                        {nodes.length === 0 && (
-                            <div className="flex flex-col items-center justify-center gap-4 py-16">
-                                <span className="material-symbols-outlined" style={{ fontSize: 56, color: '#6B5E52', opacity: 0.3 }}>route</span>
-                                <h4 className="text-lg font-bold text-[#F5EDE4]/30">Your path is being created...</h4>
-                                <button
-                                    onClick={() => router.push('/onboarding')}
-                                    className="flex items-center gap-2 bg-[#3D3228] text-[#F5EDE4] font-bold px-6 py-3 rounded-lg hover:bg-[#4a3f34] transition-all"
-                                >
-                                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>play_arrow</span>
-                                    Take Assessment
-                                </button>
-                            </div>
-                        )}
-
-                        {/* Horizontal Roadmap */}
-                        {nodes.length > 0 && (() => {
-                            const svgW = Math.max(600, nodes.length * 160 + 160);
-                            const svgH = 260;
-
-                            // Build curved path through all nodes
-                            let pathD = `M${nodes[0].cx},${nodes[0].cy}`;
-                            for (let i = 1; i < nodes.length; i++) {
-                                const prev = nodes[i - 1];
-                                const curr = nodes[i];
-                                const cpy = (prev.cy + curr.cy) / 2;
-                                pathD += ` S${prev.cx + (curr.cx - prev.cx) * 0.7},${cpy} ${curr.cx},${curr.cy}`;
-                            }
-
-                            // Progress path up to active node
-                            const activeIdx = nodes.findIndex(n => n.status === 'active');
-                            const progressEnd = activeIdx >= 0 ? activeIdx : nodes.filter(n => n.status === 'mastered').length;
-
-                            let progressPath = '';
-                            if (progressEnd > 0) {
-                                progressPath = `M${nodes[0].cx},${nodes[0].cy}`;
-                                for (let i = 1; i <= Math.min(progressEnd, nodes.length - 1); i++) {
-                                    const prev = nodes[i - 1];
-                                    const curr = nodes[i];
-                                    const cpy = (prev.cy + curr.cy) / 2;
-                                    progressPath += ` S${prev.cx + (curr.cx - prev.cx) * 0.7},${cpy} ${curr.cx},${curr.cy}`;
-                                }
-                            }
-
-                            return (
-                                <svg
-                                    width={svgW}
-                                    height={svgH}
-                                    viewBox={`0 0 ${svgW} ${svgH}`}
-                                    className="relative z-10"
-                                    style={{ minWidth: svgW }}
-                                >
-                                    <defs>
-                                        <filter id="glow-soft" x="-40%" y="-40%" width="180%" height="180%">
-                                            <feGaussianBlur stdDeviation="4" result="b" />
-                                            <feFlood floodColor="#F5EDE4" floodOpacity="0.15" result="c" />
-                                            <feComposite in="c" in2="b" operator="in" result="d" />
-                                            <feMerge><feMergeNode in="d" /><feMergeNode in="SourceGraphic" /></feMerge>
-                                        </filter>
-                                    </defs>
-
-                                    {/* ── Full road (dashed, dark) ── */}
-                                    <motion.path
-                                        d={pathD}
-                                        fill="none"
-                                        stroke="#3D3228"
-                                        strokeWidth="3"
-                                        strokeDasharray="6 10"
-                                        strokeLinecap="round"
-                                        initial={{ pathLength: 0 }}
-                                        animate={{ pathLength: 1 }}
-                                        transition={{ duration: 1.5, ease: 'easeOut' }}
-                                    />
-
-                                    {/* ── Progress road (solid creme) ── */}
-                                    {progressPath && (
-                                        <motion.path
-                                            d={progressPath}
-                                            fill="none"
-                                            stroke="#6B5E52"
-                                            strokeWidth="3"
-                                            strokeLinecap="round"
-                                            initial={{ pathLength: 0 }}
-                                            animate={{ pathLength: 1 }}
-                                            transition={{ duration: 2, delay: 0.3, ease: 'easeOut' }}
-                                        />
-                                    )}
-
-                                    {/* ── START marker ── */}
-                                    <g>
-                                        <rect x={nodes[0].cx - 24} y={nodes[0].cy + 38} width="48" height="18" rx="9" fill="#3D3228" stroke="#6B5E52" strokeWidth="1" />
-                                        <text x={nodes[0].cx} y={nodes[0].cy + 51} textAnchor="middle" fill="#D8CCBE" fontSize="9" fontWeight="800" fontFamily="Manrope">START</text>
-                                    </g>
-
-                                    {/* ── FINISH marker ── */}
-                                    {nodes.length > 1 && (
-                                        <g>
-                                            <rect x={nodes[nodes.length - 1].cx - 24} y={nodes[nodes.length - 1].cy + 38} width="48" height="18" rx="9" fill="#8FA395" />
-                                            <text x={nodes[nodes.length - 1].cx} y={nodes[nodes.length - 1].cy + 51} textAnchor="middle" fill="#fff" fontSize="8" fontWeight="800" fontFamily="Manrope">FINISH</text>
-                                        </g>
-                                    )}
-
-                                    {/* ── Nodes ── */}
-                                    {nodes.map((node, idx) => {
-                                        const { cx, cy } = node;
-                                        const isLocked = node.status === 'locked';
-                                        const isMastered = node.status === 'mastered';
-                                        const isActive = node.status === 'active';
-                                        const isHovered = hoveredNode === node.concept_id;
-                                        const isSelected = selectedNode?.concept_id === node.concept_id;
-
-                                        const baseR = isActive ? 26 : isMastered ? 22 : 18;
-                                        const r = (isHovered || isSelected) ? baseR + 6 : baseR;
-
-                                        // Colors: warm brown/terracotta circles, creme icons
-                                        const fillColor = isLocked ? '#2A2018'
-                                            : isMastered ? '#8FA395'
-                                            : isActive ? '#C17C64'
-                                            : '#6B5E52';
-                                        const strokeColor = isLocked ? '#4a3f34'
-                                            : isMastered ? '#6d8a73'
-                                            : isActive ? '#a85e48'
-                                            : '#9A8E82';
-                                        const iconColor = isLocked ? '#4a3f34'
-                                            : isMastered ? '#F5EDE4'
-                                            : isActive ? '#F5EDE4'
-                                            : '#F5EDE4';
-
-                                        return (
-                                            <g
-                                                key={node.concept_id}
-                                                className="cursor-pointer"
-                                                onClick={() => handleNodeClick(node)}
-                                                onMouseEnter={() => setHoveredNode(node.concept_id)}
-                                                onMouseLeave={() => setHoveredNode(null)}
-                                                style={{ opacity: isLocked ? 0.45 : 1 }}
-                                            >
-                                                {/* Active: soft pulse */}
-                                                {isActive && (
-                                                    <circle cx={cx} cy={cy} r={baseR + 10} fill="none" stroke="#F5EDE4" strokeWidth="1" opacity="0.15">
-                                                        <animate attributeName="r" values={`${baseR + 6};${baseR + 20};${baseR + 6}`} dur="3s" repeatCount="indefinite" />
-                                                        <animate attributeName="opacity" values="0.2;0;0.2" dur="3s" repeatCount="indefinite" />
-                                                    </circle>
-                                                )}
-
-                                                {/* Outer border */}
-                                                <motion.circle
-                                                    cx={cx} cy={cy} r={r + 3}
-                                                    fill="none"
-                                                    stroke={strokeColor}
-                                                    strokeWidth={(isHovered || isSelected) ? 2.5 : 1.5}
-                                                    opacity={(isHovered || isSelected) ? 0.6 : 0.3}
-                                                    initial={{ scale: 0 }}
-                                                    animate={{ scale: 1 }}
-                                                    transition={{ type: 'spring', delay: 0.1 + idx * 0.05, stiffness: 200 }}
-                                                    style={{ transformOrigin: `${cx}px ${cy}px` }}
-                                                />
-
-                                                {/* Main circle */}
-                                                <motion.circle
-                                                    cx={cx} cy={cy} r={r}
-                                                    fill={fillColor}
-                                                    stroke={strokeColor}
-                                                    strokeWidth="2"
-                                                    filter={(!isLocked) ? 'url(#glow-soft)' : 'none'}
-                                                    initial={{ scale: 0 }}
-                                                    animate={{ scale: 1 }}
-                                                    transition={{ type: 'spring', delay: 0.1 + idx * 0.05, stiffness: 220 }}
-                                                    style={{ transformOrigin: `${cx}px ${cy}px` }}
-                                                />
-
-                                                {/* Inner icon */}
-                                                <text
-                                                    x={cx} y={cy + 6}
-                                                    textAnchor="middle"
-                                                    fill={iconColor}
-                                                    fontSize={isActive ? '20' : '16'}
-                                                    fontFamily="Material Symbols Outlined"
-                                                    style={{ fontVariationSettings: isMastered || isActive ? "'FILL' 1" : "'FILL' 0" }}
-                                                >
-                                                    {isLocked ? 'lock' : isMastered ? 'check_circle' : isActive ? 'play_arrow' : 'circle'}
-                                                </text>
-
-                                                {/* Level number */}
-                                                <circle cx={cx + r * 0.7} cy={cy - r * 0.7} r="9" fill={isLocked ? '#2A2018' : '#3D3228'} stroke="#1a1410" strokeWidth="2" />
-                                                <text x={cx + r * 0.7} y={cy - r * 0.7 + 3.5} textAnchor="middle" fill="#D8CCBE" fontSize="8" fontWeight="800" fontFamily="Manrope">
-                                                    {idx + 1}
-                                                </text>
-
-                                                {/* Label below */}
-                                                <text
-                                                    x={cx} y={cy + r + 16}
-                                                    textAnchor="middle"
-                                                    fill={(isHovered || isSelected) ? '#F5EDE4' : isLocked ? '#4a3f34' : '#D8CCBE'}
-                                                    fontSize={(isHovered || isSelected) ? '11' : '10'}
-                                                    fontWeight={(isHovered || isActive) ? '700' : '500'}
-                                                    fontFamily="Manrope, sans-serif"
-                                                >
-                                                    {node.label.length > 16 ? node.label.slice(0, 14) + '…' : node.label}
-                                                </text>
-
-                                                {/* Status sublabel */}
-                                                {!isLocked && (
-                                                    <text
-                                                        x={cx} y={cy + r + 28}
-                                                        textAnchor="middle"
-                                                        fill="#6B5E52"
-                                                        fontSize="8" fontWeight="600"
-                                                        fontFamily="Manrope, sans-serif"
-                                                    >
-                                                        {isMastered ? `${Math.round(node.mastery * 100)}%` : isActive ? 'Current' : ''}
-                                                    </text>
-                                                )}
-
-                                                {/* Hover tooltip for locked */}
-                                                {isHovered && isLocked && (
-                                                    <g>
-                                                        <rect x={cx - 50} y={cy - r - 26} width="100" height="18" rx="5" fill="#2A2018" stroke="#4a3f34" strokeWidth="0.5" />
-                                                        <text x={cx} y={cy - r - 14} textAnchor="middle" fill="#9A8E82" fontSize="8" fontWeight="600" fontFamily="Manrope">
-                                                            Complete prev. levels
-                                                        </text>
-                                                    </g>
-                                                )}
-                                            </g>
-                                        );
-                                    })}
-                                </svg>
-                            );
-                        })()}
-                    </div>
-                </ScrollReveal>
-
-                {/* ═══ Selected Node Detail Panel ═══ */}
-                <AnimatePresence>
-                    {selectedNode && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10, height: 0 }}
-                            animate={{ opacity: 1, y: 0, height: 'auto' }}
-                            exit={{ opacity: 0, y: -10, height: 0 }}
-                            className="mx-4 lg:mx-8 mt-3 overflow-hidden"
-                        >
-                            <div className="bg-white border border-[#D8CCBE] rounded-xl p-5 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-4">
-                                    <div className="size-12 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${NODE_COLORS[selectedNode.status]}15`, border: `2px solid ${NODE_COLORS[selectedNode.status]}40` }}>
-                                        <span className="material-symbols-outlined" style={{ fontSize: 24, color: NODE_COLORS[selectedNode.status], fontVariationSettings: "'FILL' 1" }}>
-                                            {selectedNode.status === 'mastered' ? 'verified' : selectedNode.status === 'active' ? 'rocket_launch' : 'lock'}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-[#2A2018] font-bold text-base">{selectedNode.label}</h4>
-                                        <p className="text-[#9A8E82] text-xs mt-0.5">
-                                            {selectedNode.status === 'locked'
-                                                ? 'Complete prerequisites to unlock this level'
-                                                : selectedNode.status === 'mastered'
-                                                    ? `Mastered — ${Math.round(selectedNode.mastery * 100)}%`
-                                                    : 'Ready to learn'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    {selectedNode.status !== 'locked' ? (
-                                        <button
-                                            onClick={() => router.push(`/season/${selectedNode.concept_id}`)}
-                                            className="flex items-center gap-2 bg-[#C17C64] text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-all hover:brightness-110"
-                                        >
-                                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>
-                                                {selectedNode.status === 'mastered' ? 'replay' : 'play_arrow'}
-                                            </span>
-                                            {selectedNode.status === 'mastered' ? 'Review' : 'Start'}
-                                        </button>
-                                    ) : (
-                                        <span className="text-[#9A8E82] text-sm flex items-center gap-1.5 bg-[#F5EDE4] px-3 py-2 rounded-lg">
-                                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>lock</span> Locked
-                                        </span>
-                                    )}
-                                    <button onClick={() => setSelectedNode(null)} className="text-[#9A8E82] hover:text-[#2A2018]">
-                                        <span className="material-symbols-outlined" style={{ fontSize: 18 }}>close</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* ═══ Seasons / Courses Grid ═══ */}
-                <ScrollReveal className="mx-4 lg:mx-8 mt-6" delay={0.1}>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-bold text-[#2A2018] flex items-center gap-2">
-                            <span className="material-symbols-outlined text-accent" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>star</span>
-                            Your Courses
-                        </h3>
-                        <button onClick={() => router.push('/dashboard')} className="text-xs text-primary hover:underline font-semibold">View Dashboard</button>
-                    </div>
-
-                    {nodes.length === 0 ? (
-                        <div className="bg-white border border-[#D8CCBE] rounded-xl p-8 text-center">
-                            <span className="material-symbols-outlined text-[#9A8E82]" style={{ fontSize: 40 }}>library_books</span>
-                            <p className="text-[#9A8E82] text-sm mt-2">Complete your assessment to see your personalized courses.</p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {nodes.slice(0, 9).map((node, idx) => (
-                                <motion.div
-                                    key={node.concept_id}
-                                    initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    transition={{ delay: 0.3 + idx * 0.05 }}
-                                    whileHover={{ y: -4, scale: 1.02 }}
-                                    onClick={() => {
-                                        if (node.status !== 'locked') router.push(`/season/${node.concept_id}`);
-                                    }}
-                                    className={`bg-white border rounded-xl p-4 transition-all group ${
-                                        node.status === 'locked'
-                                            ? 'border-[#D8CCBE] opacity-50 cursor-not-allowed'
-                                            : 'border-[#D8CCBE] hover:border-[#C17C64]/40 cursor-pointer prime-glow-hover'
-                                    }`}
-                                >
-                                    <div className="flex items-start justify-between mb-3">
-                                        <div className="size-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${NODE_COLORS[node.status]}12` }}>
-                                            <span className="material-symbols-outlined" style={{ fontSize: 20, color: NODE_COLORS[node.status], fontVariationSettings: "'FILL' 1" }}>
-                                                {node.status === 'mastered' ? 'check_circle' : node.status === 'active' ? 'play_circle' : 'lock'}
-                                            </span>
+                        <div className="flex gap-3 overflow-x-auto hide-scrollbar px-4 lg:px-12 pb-2">
+                            {courses.slice(0, 10).map((course, idx) => (
+                                <motion.div key={course.concept_id}
+                                    whileHover={{ scale: 1.05 }}
+                                    onClick={() => router.push(`/season/${course.concept_id}`)}
+                                    className="flex-shrink-0 flex items-end cursor-pointer group/top"
+                                    style={{ width: 200 }}>
+                                    {/* Big number */}
+                                    <span className="text-[120px] font-black leading-none select-none -mr-3 relative z-10"
+                                        style={{
+                                            color: 'transparent',
+                                            WebkitTextStroke: '3px rgba(255,255,255,0.15)',
+                                            fontFamily: "'Manrope', sans-serif",
+                                        }}>
+                                        {idx + 1}
+                                    </span>
+                                    {/* Card */}
+                                    <div className="w-[130px] flex-shrink-0 rounded overflow-hidden relative"
+                                        style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
+                                        <div className="aspect-[2/3] relative bg-gradient-to-b from-[#1A1A1A] to-[#0A0A0A]">
+                                            <div className="absolute inset-0 opacity-25"
+                                                style={{ background: `linear-gradient(180deg, ${COURSE_COLORS[idx]}30, transparent 60%)` }} />
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <span className="material-symbols-outlined text-white/15 group-hover/top:text-white/30 transition-all"
+                                                    style={{ fontSize: 44, fontVariationSettings: "'FILL' 1" }}>
+                                                    {COURSE_ICONS[idx % COURSE_ICONS.length]}
+                                                </span>
+                                            </div>
+                                            <div className="absolute top-2 left-2 text-[8px] font-black text-[#E50914]">LF</div>
+                                            <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black to-transparent pt-8 pb-2 px-2">
+                                                <p className="text-white text-[11px] font-bold leading-tight">{course.label}</p>
+                                            </div>
                                         </div>
-                                        <span
-                                            className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full"
-                                            style={{
-                                                backgroundColor: `${NODE_COLORS[node.status]}15`,
-                                                color: NODE_COLORS[node.status],
-                                                border: `1px solid ${NODE_COLORS[node.status]}30`,
-                                            }}
-                                        >
-                                            {node.status === 'mastered' ? 'Completed' : node.status === 'active' ? 'In Progress' : 'Locked'}
-                                        </span>
-                                    </div>
-                                    <h4 className="text-[#2A2018] font-semibold text-sm mb-2 group-hover:text-primary transition-colors">{node.label}</h4>
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
-                                            <div className="h-full rounded-full transition-all" style={{ width: `${Math.round(node.mastery * 100)}%`, backgroundColor: NODE_COLORS[node.status] }} />
-                                        </div>
-                                        <span className="text-[11px] font-bold" style={{ color: NODE_COLORS[node.status] }}>
-                                            {Math.round(node.mastery * 100)}%
-                                        </span>
                                     </div>
                                 </motion.div>
                             ))}
                         </div>
-                    )}
-                </ScrollReveal>
+                    </ScrollReveal>
+                )}
 
-                {/* ═══ Change Learning Path ═══ */}
-                <ScrollReveal className="mx-4 lg:mx-8 mt-6" delay={0.1}>
-                    <div className="bg-gradient-to-r from-white via-[#F5EDE4] to-white border border-[#D8CCBE] rounded-xl p-5 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="size-11 rounded-lg bg-[#D4A574]/10 flex items-center justify-center flex-shrink-0">
-                                <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 24, fontVariationSettings: "'FILL' 1" }}>swap_horiz</span>
-                            </div>
-                            <div>
-                                <h4 className="text-[#2A2018] font-bold text-sm">Want to learn something different?</h4>
-                                <p className="text-[#9A8E82] text-xs mt-0.5">Switch your learning goal or add a new domain to explore.</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => router.push('/onboarding')}
-                            className="flex items-center gap-2 bg-[#D4A574]/10 border border-[#D4A574]/30 text-[#D4A574] font-bold text-sm px-5 py-2.5 rounded-lg transition-all hover:bg-[#D4A574]/20 flex-shrink-0"
-                        >
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>explore</span>
-                            Change Topic
-                        </button>
-                    </div>
-                </ScrollReveal>
+                {/* ═══ All Courses Row ═══ */}
+                {courses.length > 0 && (
+                    <ScrollReveal className="mb-6" delay={0.15}>
+                        <CourseRow title="Your Courses" icon="library_books" courses={courses} router={router} startIdx={0} />
+                    </ScrollReveal>
+                )}
+
+                {/* ═══ New For You (courses not yet started) ═══ */}
+                {notStarted.length > 3 && (
+                    <ScrollReveal className="mb-6" delay={0.2}>
+                        <CourseRow title="New For You" icon="new_releases" courses={notStarted} router={router} startIdx={5} />
+                    </ScrollReveal>
+                )}
+
+                {/* ═══ "Because you studied X" row ═══ */}
+                {inProgress.length > 0 && courses.length > 3 && (
+                    <ScrollReveal className="mb-6" delay={0.25}>
+                        <CourseRow
+                            title={`Because You Studied ${inProgress[0]?.label?.split(' ')[0] || ''}`}
+                            icon="recommend"
+                            courses={courses.filter(c => c.concept_id !== inProgress[0]?.concept_id).slice(0, 8)}
+                            router={router}
+                            startIdx={3}
+                        />
+                    </ScrollReveal>
+                )}
 
                 {/* ═══ Quick Actions ═══ */}
-                <ScrollReveal className="mx-4 lg:mx-8 mt-6 mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" delay={0.1}>
-                    <button
-                        onClick={() => {
-                            const target = activeNode || nodes.find(n => n.status !== 'locked');
-                            if (target) router.push(`/bridge-sprint?concept_id=${target.concept_id}`);
-                            else router.push('/bridge-sprint');
-                        }}
-                        className="bg-white border border-[#D8CCBE] rounded-xl p-5 text-left hover:border-[#C17C64]/30 transition-all group"
-                    >
-                        <div className="size-10 rounded-lg bg-[#C17C64]/10 flex items-center justify-center mb-3 group-hover:bg-[#C17C64]/20 transition-colors">
-                            <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22 }}>route</span>
-                        </div>
-                        <h4 className="text-[#2A2018] font-bold text-sm mb-1">Bridge Sprint</h4>
-                        <p className="text-[#9A8E82] text-xs">Quick review of prerequisite gaps</p>
-                    </button>
-
-                    <button
-                        onClick={() => router.push('/mentor')}
-                        className="bg-white border border-[#D8CCBE] rounded-xl p-5 text-left hover:border-[#C17C64]/30 transition-all group"
-                    >
-                        <div className="size-10 rounded-lg bg-[#D4A574]/10 flex items-center justify-center mb-3 group-hover:bg-[#D4A574]/20 transition-colors">
-                            <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 22 }}>psychology</span>
-                        </div>
-                        <h4 className="text-[#2A2018] font-bold text-sm mb-1">AI Mentor</h4>
-                        <p className="text-[#9A8E82] text-xs">Get Socratic guidance on any concept</p>
-                    </button>
-
-                    <button
-                        onClick={() => router.push('/dashboard')}
-                        className="bg-white border border-[#D8CCBE] rounded-xl p-5 text-left hover:border-[#D4A574]/30 transition-all group"
-                    >
-                        <div className="size-10 rounded-lg bg-[#D4A574]/10 flex items-center justify-center mb-3 group-hover:bg-[#D4A574]/20 transition-colors">
-                            <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>analytics</span>
-                        </div>
-                        <h4 className="text-[#2A2018] font-bold text-sm mb-1">Dashboard</h4>
-                        <p className="text-[#9A8E82] text-xs">Track placement readiness & skills</p>
-                    </button>
-
-                    <button
-                        onClick={() => router.push('/profile')}
-                        className="bg-white border border-[#D8CCBE] rounded-xl p-5 text-left hover:border-[#8FA395]/30 transition-all group"
-                    >
-                        <div className="size-10 rounded-lg bg-[#8FA395]/10 flex items-center justify-center mb-3 group-hover:bg-[#8FA395]/20 transition-colors">
-                            <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>emoji_events</span>
-                        </div>
-                        <h4 className="text-[#2A2018] font-bold text-sm mb-1">Achievements</h4>
-                        <p className="text-[#9A8E82] text-xs">View badges, skills & certifications</p>
-                    </button>
+                <ScrollReveal className="px-4 lg:px-12 mt-4 mb-10" delay={0.3}>
+                    <div className="flex gap-3 overflow-x-auto hide-scrollbar">
+                        {[
+                            { icon: 'psychology', label: 'AI Mentor', desc: 'Ask any doubt', path: '/mentor', color: '#E87C03' },
+                            { icon: 'analytics', label: 'Dashboard', desc: 'Track progress', path: '/dashboard', color: '#5DADE2' },
+                            { icon: 'emoji_events', label: 'Achievements', desc: 'Badges & skills', path: '/profile', color: '#46D369' },
+                            { icon: 'route', label: 'Bridge Sprint', desc: 'Fill gaps', path: '/bridge-sprint', color: '#E50914' },
+                            { icon: 'share', label: 'Share Progress', desc: 'Show off!', action: () => setShowShare(true), color: '#1DA1F2' },
+                        ].map(a => (
+                            <button key={a.label} onClick={() => a.action ? a.action() : router.push(a.path)}
+                                className="flex-shrink-0 bg-[#1E1E1E] border border-[#2E2E2E] rounded-lg px-5 py-3 flex items-center gap-3 hover:border-[#444] transition-all group/qa">
+                                <span className="material-symbols-outlined group-hover/qa:scale-110 transition-transform" style={{ fontSize: 22, color: a.color, fontVariationSettings: "'FILL' 1" }}>{a.icon}</span>
+                                <div className="text-left">
+                                    <p className="text-white text-sm font-bold">{a.label}</p>
+                                    <p className="text-[#808080] text-[10px]">{a.desc}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
                 </ScrollReveal>
-
             </div>
+
+            {/* Share Card Modal */}
+            <ShareCard isOpen={showShare} onClose={() => setShowShare(false)}
+                stats={{ name: learnerName, xp: stats.xp, streak: stats.streak, mastered: masteredCount, courses: courses.length, level: stats.level }} />
         </AppLayout>
     );
 }

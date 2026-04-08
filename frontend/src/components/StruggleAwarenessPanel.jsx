@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const ZONE_STYLES = {
-    too_easy:            { bg: '#9A8E82' },
-    comfortable:         { bg: '#8FA395' },
-    productive_struggle: { bg: '#D4A574' },
-    struggling:          { bg: '#C17C64' },
+    too_easy:            { bg: '#808080' },
+    comfortable:         { bg: '#46D369' },
+    productive_struggle: { bg: '#E87C03' },
+    struggling:          { bg: '#E50914' },
     frustrated:          { bg: '#ef4444' },
     giving_up:           { bg: '#dc2626' },
 };
@@ -17,8 +17,8 @@ const TIMELINE_ICONS = {
     gate_fail: 'quiz', undo_burst: 'undo', idle: 'hourglass_top', hint: 'psychology',
 };
 const TIMELINE_COLORS = {
-    zone_change: '#D4A574', error: '#C17C64', success: '#8FA395',
-    gate_fail: '#C17C64', undo_burst: '#D4A574', idle: '#9A8E82', hint: '#8FA395',
+    zone_change: '#E87C03', error: '#E50914', success: '#46D369',
+    gate_fail: '#E50914', undo_burst: '#E87C03', idle: '#808080', hint: '#46D369',
 };
 
 function formatTime(date) {
@@ -60,13 +60,13 @@ export default function StruggleAwarenessPanel({
                     transition={{ type: 'spring', damping: 28, stiffness: 260 }}
                     className="fixed top-[120px] right-4 z-40 w-[340px] max-h-[calc(100vh-140px)] flex flex-col rounded-2xl border shadow-2xl overflow-hidden"
                     style={{
-                        backgroundColor: '#F5EDE4',
-                        borderColor: '#D8CCBE',
+                        backgroundColor: '#141414',
+                        borderColor: '#333333',
                         boxShadow: '-4px 4px 32px rgba(42,32,24,0.12)',
                     }}
                 >
                     {/* ── Header ── */}
-                    <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: '#D8CCBE' }}>
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b" style={{ borderColor: '#333333' }}>
                         <div className="flex items-center gap-2">
                             <span className="relative flex size-2.5">
                                 {isStruggling && (
@@ -74,18 +74,18 @@ export default function StruggleAwarenessPanel({
                                 )}
                                 <span className="relative inline-flex rounded-full size-2.5" style={{ backgroundColor: style.bg }} />
                             </span>
-                            <span className="text-sm font-bold text-[#2A2018]">Struggle Detector</span>
+                            <span className="text-sm font-bold text-[#E5E5E5]">Struggle Detector</span>
                             <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${style.bg}15`, color: style.bg }}>
                                 LIVE
                             </span>
                         </div>
-                        <button onClick={() => setDismissed(true)} className="text-[#9A8E82] hover:text-[#2A2018] transition-colors">
+                        <button onClick={() => setDismissed(true)} className="text-[#808080] hover:text-[#E5E5E5] transition-colors">
                             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>close</span>
                         </button>
                     </div>
 
                     {/* ── Zone + Score Bar ── */}
-                    <div className="px-4 py-3 border-b" style={{ borderColor: '#E2D8CC' }}>
+                    <div className="px-4 py-3 border-b" style={{ borderColor: '#2E2E2E' }}>
                         <div className="flex items-center justify-between mb-1.5">
                             <div className="flex items-center gap-1.5">
                                 <span className="material-symbols-outlined" style={{ fontSize: 16, color: style.bg }}>{zoneMeta.icon}</span>
@@ -93,7 +93,7 @@ export default function StruggleAwarenessPanel({
                             </div>
                             <span className="text-xs font-mono font-bold" style={{ color: style.bg }}>{score}/100</span>
                         </div>
-                        <div className="w-full h-2 bg-[#E2D8CC] rounded-full overflow-hidden">
+                        <div className="w-full h-2 bg-[#2E2E2E] rounded-full overflow-hidden">
                             <motion.div
                                 className="h-full rounded-full"
                                 style={{ backgroundColor: style.bg }}
@@ -102,26 +102,26 @@ export default function StruggleAwarenessPanel({
                             />
                         </div>
                         <div className="flex justify-between mt-1">
-                            <span className="text-[8px] text-[#9A8E82]">Easy</span>
-                            <span className="text-[8px] text-[#9A8E82]">Giving Up</span>
+                            <span className="text-[8px] text-[#808080]">Easy</span>
+                            <span className="text-[8px] text-[#808080]">Giving Up</span>
                         </div>
                     </div>
 
                     {/* ── Live Metrics Grid ── */}
-                    <div className="px-4 py-3 border-b" style={{ borderColor: '#E2D8CC' }}>
+                    <div className="px-4 py-3 border-b" style={{ borderColor: '#2E2E2E' }}>
                         <div className="grid grid-cols-2 gap-2">
                             <MetricCard icon="error" value={liveMetrics?.errorCount || 0}
                                 sub={`${errorRate}% error rate`}
-                                color={errorRate > 40 ? '#C17C64' : '#6B5E52'} alert={errorRate > 40} />
+                                color={errorRate > 40 ? '#E50914' : '#B3B3B3'} alert={errorRate > 40} />
                             <MetricCard icon="hourglass_top" value={`${liveMetrics?.idleSeconds || 0}s`}
                                 sub="idle time"
-                                color={liveMetrics?.idleSeconds > 60 ? '#C17C64' : '#6B5E52'} alert={liveMetrics?.idleSeconds > 60} />
+                                color={liveMetrics?.idleSeconds > 60 ? '#E50914' : '#B3B3B3'} alert={liveMetrics?.idleSeconds > 60} />
                             <MetricCard icon="undo" value={liveMetrics?.undoCount || 0}
                                 sub="undo bursts"
-                                color={liveMetrics?.undoCount > 2 ? '#D4A574' : '#6B5E52'} alert={liveMetrics?.undoCount > 2} />
+                                color={liveMetrics?.undoCount > 2 ? '#E87C03' : '#B3B3B3'} alert={liveMetrics?.undoCount > 2} />
                             <MetricCard icon="assignment" value={liveMetrics?.totalAttempts || 0}
                                 sub={`${liveMetrics?.gateFailures || 0} quiz fails`}
-                                color={liveMetrics?.gateFailures > 1 ? '#C17C64' : '#6B5E52'} alert={liveMetrics?.gateFailures > 1} />
+                                color={liveMetrics?.gateFailures > 1 ? '#E50914' : '#B3B3B3'} alert={liveMetrics?.gateFailures > 1} />
                         </div>
                     </div>
 
@@ -132,33 +132,33 @@ export default function StruggleAwarenessPanel({
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: 'auto', opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
-                                className="overflow-hidden border-b" style={{ borderColor: '#E2D8CC' }}
+                                className="overflow-hidden border-b" style={{ borderColor: '#2E2E2E' }}
                             >
                                 <div className="px-4 py-3" style={{ backgroundColor: `${style.bg}08` }}>
                                     <div className="flex items-center justify-between mb-2">
                                         <div className="flex items-center gap-1.5">
                                             <span className="material-symbols-outlined" style={{ fontSize: 14, color: style.bg, fontVariationSettings: "'FILL' 1" }}>psychology</span>
-                                            <span className="text-[11px] font-bold text-[#2A2018]">AI Mentor</span>
+                                            <span className="text-[11px] font-bold text-[#E5E5E5]">AI Mentor</span>
                                             <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${style.bg}15`, color: style.bg }}>
                                                 L{autoHint.level}
                                             </span>
                                         </div>
-                                        <button onClick={onDismissHint} className="text-[#9A8E82] hover:text-[#2A2018]">
+                                        <button onClick={onDismissHint} className="text-[#808080] hover:text-[#E5E5E5]">
                                             <span className="material-symbols-outlined" style={{ fontSize: 14 }}>close</span>
                                         </button>
                                     </div>
-                                    <p className="text-[11px] text-[#3D3228] leading-relaxed whitespace-pre-line">{autoHint.message}</p>
+                                    <p className="text-[11px] text-[#E5E5E5] leading-relaxed whitespace-pre-line">{autoHint.message}</p>
                                     <div className="flex items-center gap-2 mt-2">
                                         <button onClick={() => onOpenMentor?.()}
                                             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white hover:brightness-110"
-                                            style={{ backgroundColor: '#C17C64' }}>
+                                            style={{ backgroundColor: '#E50914' }}>
                                             <span className="material-symbols-outlined" style={{ fontSize: 13 }}>chat</span>
                                             Ask Mentor
                                         </button>
                                         {suggestBridgeSprint && (
                                             <button onClick={() => onOpenBridgeSprint?.()}
                                                 className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-semibold border"
-                                                style={{ borderColor: '#D8CCBE', color: '#D4A574' }}>
+                                                style={{ borderColor: '#333333', color: '#E87C03' }}>
                                                 <span className="material-symbols-outlined" style={{ fontSize: 13 }}>route</span>
                                                 Bridge Sprint
                                             </button>
@@ -171,7 +171,7 @@ export default function StruggleAwarenessPanel({
 
                     {/* ── Activity Log (scrollable) ── */}
                     <div className="flex-1 overflow-y-auto min-h-0 px-4 py-2.5">
-                        <h4 className="text-[9px] font-bold uppercase tracking-wider text-[#9A8E82] mb-2">Activity Log</h4>
+                        <h4 className="text-[9px] font-bold uppercase tracking-wider text-[#808080] mb-2">Activity Log</h4>
                         {timeline?.length > 0 ? (
                             <div className="space-y-1">
                                 {timeline.map((entry) => (
@@ -179,7 +179,7 @@ export default function StruggleAwarenessPanel({
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-[10px] text-[#9A8E82] text-center py-4">
+                            <p className="text-[10px] text-[#808080] text-center py-4">
                                 Events appear here as you code and answer questions.
                             </p>
                         )}
@@ -187,14 +187,14 @@ export default function StruggleAwarenessPanel({
 
                     {/* ── Why You're Here (struggling only) ── */}
                     {isStruggling && timeline?.some(e => e.type === 'zone_change') && (
-                        <div className="px-4 py-2.5 border-t" style={{ borderColor: '#E2D8CC', backgroundColor: `${style.bg}08` }}>
+                        <div className="px-4 py-2.5 border-t" style={{ borderColor: '#2E2E2E', backgroundColor: `${style.bg}08` }}>
                             <h4 className="text-[9px] font-bold uppercase tracking-wider mb-1" style={{ color: style.bg }}>Why you're here</h4>
                             {(() => {
                                 const last = timeline.find(e => e.type === 'zone_change');
                                 return last?.details?.reasons?.map((r, i) => (
                                     <div key={i} className="flex items-start gap-1.5 mt-1">
                                         <span className="material-symbols-outlined mt-0.5" style={{ fontSize: 11, color: style.bg }}>arrow_right</span>
-                                        <span className="text-[11px] text-[#3D3228]">{r}</span>
+                                        <span className="text-[11px] text-[#E5E5E5]">{r}</span>
                                     </div>
                                 ));
                             })()}
@@ -214,7 +214,7 @@ function MetricCard({ icon, value, sub, color, alert }) {
             <span className="material-symbols-outlined" style={{ fontSize: 18, color }}>{icon}</span>
             <div className="min-w-0">
                 <div className="text-sm font-black leading-none" style={{ color }}>{value}</div>
-                <div className="text-[9px] text-[#9A8E82] mt-0.5 truncate">{sub}</div>
+                <div className="text-[9px] text-[#808080] mt-0.5 truncate">{sub}</div>
             </div>
         </div>
     );
@@ -222,13 +222,13 @@ function MetricCard({ icon, value, sub, color, alert }) {
 
 function TimelineEntry({ entry }) {
     const icon = TIMELINE_ICONS[entry.type] || 'circle';
-    const color = TIMELINE_COLORS[entry.type] || '#9A8E82';
+    const color = TIMELINE_COLORS[entry.type] || '#808080';
     return (
         <div className="flex items-start gap-2 py-1 px-1.5 rounded-lg hover:bg-[#EDE5DB]/50 transition-colors">
             <span className="material-symbols-outlined mt-0.5 shrink-0" style={{ fontSize: 13, color }}>{icon}</span>
             <div className="min-w-0 flex-1">
-                <p className="text-[10px] text-[#3D3228] leading-tight">{entry.message}</p>
-                <p className="text-[8px] text-[#9A8E82] mt-0.5">{formatTime(entry.time)}</p>
+                <p className="text-[10px] text-[#E5E5E5] leading-tight">{entry.message}</p>
+                <p className="text-[8px] text-[#808080] mt-0.5">{formatTime(entry.time)}</p>
             </div>
         </div>
     );

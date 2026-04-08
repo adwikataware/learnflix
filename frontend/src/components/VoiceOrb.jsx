@@ -19,10 +19,10 @@ export default function VoiceOrb({ state = 'idle', audioLevel = 0, onClick, size
 
     // Color based on state
     const colors = {
-        idle:       { core: '#C17C64', glow: 'rgba(193,124,100,0.2)', ring: 'rgba(193,124,100,0.15)' },
-        listening:  { core: '#D4A574', glow: 'rgba(212,165,116,0.4)', ring: 'rgba(212,165,116,0.25)' },
-        speaking:   { core: '#8FA395', glow: 'rgba(143,163,149,0.4)', ring: 'rgba(143,163,149,0.25)' },
-        processing: { core: '#C17C64', glow: 'rgba(193,124,100,0.3)', ring: 'rgba(193,124,100,0.2)' },
+        idle:       { core: '#E50914', glow: 'rgba(193,124,100,0.2)', ring: 'rgba(193,124,100,0.15)' },
+        listening:  { core: '#E87C03', glow: 'rgba(212,165,116,0.4)', ring: 'rgba(212,165,116,0.25)' },
+        speaking:   { core: '#46D369', glow: 'rgba(143,163,149,0.4)', ring: 'rgba(143,163,149,0.25)' },
+        processing: { core: '#E50914', glow: 'rgba(193,124,100,0.3)', ring: 'rgba(193,124,100,0.2)' },
     };
     const c = colors[state] || colors.idle;
 

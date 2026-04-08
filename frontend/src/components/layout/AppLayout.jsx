@@ -2,9 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from './Sidebar';
-import { getLearnerName, getLearnerId, getConstellation } from '@/lib/api';
+import ToastContainer from '@/components/Toast';
+import { getLearnerName, getLearnerId, getConstellation, getActiveProfile, clearActiveProfile } from '@/lib/api';
 
-const STATUS_COLORS = { mastered: '#8FA395', active: '#C17C64', locked: '#9A8E82' };
+const STATUS_COLORS = { mastered: '#46D369', active: '#E50914', locked: '#808080' };
 const STATUS_ICONS = { mastered: 'check_circle', active: 'play_circle', locked: 'lock' };
 
 export default function AppLayout({ children, hideHeader = false }) {
@@ -85,7 +86,7 @@ export default function AppLayout({ children, hideHeader = false }) {
                     <header className="sticky top-0 z-30 flex items-center justify-between px-6 lg:px-8 py-3 glass-panel border-b border-border-dark">
                         <button
                             onClick={() => setSidebarOpen(true)}
-                            className="lg:hidden p-2 -ml-2 text-[#6B5E52] hover:text-[#2A2018] transition-colors"
+                            className="lg:hidden p-2 -ml-2 text-[#B3B3B3] hover:text-[#E5E5E5] transition-colors"
                         >
                             <span className="material-symbols-outlined" style={{ fontSize: 24 }}>menu</span>
                         </button>
@@ -94,34 +95,43 @@ export default function AppLayout({ children, hideHeader = false }) {
                         <div className="flex-1 max-w-xl hidden sm:block">
                             <button
                                 onClick={() => setSearchOpen(true)}
-                                className="w-full flex items-center gap-3 bg-surface-dark border border-border-dark rounded-full py-2.5 pl-4 pr-4 text-sm text-[#9A8E82] hover:border-primary/40 transition-all"
+                                className="w-full flex items-center gap-3 bg-surface-dark border border-border-dark rounded-full py-2.5 pl-4 pr-4 text-sm text-[#808080] hover:border-primary/40 transition-all"
                             >
                                 <span className="material-symbols-outlined" style={{ fontSize: 20 }}>search</span>
                                 <span>Search courses, concepts, or skills...</span>
-                                <kbd className="ml-auto hidden lg:inline-flex items-center gap-0.5 text-[10px] text-[#9A8E82] bg-[#F0E7DC] border border-[#D8CCBE] px-2 py-0.5 rounded-md font-mono">/</kbd>
+                                <kbd className="ml-auto hidden lg:inline-flex items-center gap-0.5 text-[10px] text-[#808080] bg-[#2A2A2A] border border-[#333333] px-2 py-0.5 rounded-md font-mono">/</kbd>
                             </button>
                         </div>
 
                         <div className="flex items-center gap-4 lg:gap-6 ml-auto">
                             <div className="hidden md:flex items-center gap-2">
                                 <span className="material-symbols-outlined text-orange-500 animate-pulse" style={{ fontVariationSettings: "'FILL' 1", fontSize: 22 }}>local_fire_department</span>
-                                <span className="text-[#2A2018] font-bold text-sm">{streak} Day Streak</span>
+                                <span className="text-[#E5E5E5] font-bold text-sm">{streak} Day Streak</span>
                             </div>
-                            <button className="relative text-[#6B5E52] hover:text-[#2A2018] transition-colors">
+                            <button className="relative text-[#B3B3B3] hover:text-[#E5E5E5] transition-colors">
                                 <span className="material-symbols-outlined" style={{ fontSize: 22 }}>notifications</span>
                                 <span className="absolute -top-0.5 -right-0.5 size-2 bg-primary rounded-full border-2 border-bg-dark" />
                             </button>
-                            <div
-                                className="flex items-center gap-3 pl-4 border-l border-border-dark cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => router.push('/profile')}
-                            >
-                                <div className="text-right hidden sm:block">
-                                    <p className="text-sm font-bold text-[#2A2018] leading-none">{learnerName}</p>
-                                    <p className="text-[10px] text-primary uppercase tracking-wider font-bold mt-0.5">Active Learner</p>
+                            <div className="flex items-center gap-2 pl-4 border-l border-border-dark">
+                                <div
+                                    className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity"
+                                    onClick={() => router.push('/profile')}
+                                >
+                                    <div className="text-right hidden sm:block">
+                                        <p className="text-sm font-bold text-[#E5E5E5] leading-none">{learnerName}</p>
+                                        <p className="text-[10px] text-primary uppercase tracking-wider font-bold mt-0.5">Active Learner</p>
+                                    </div>
+                                    <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-primary/40 flex items-center justify-center">
+                                        <span className="text-white font-extrabold text-sm">{learnerName.charAt(0).toUpperCase()}</span>
+                                    </div>
                                 </div>
-                                <div className="size-9 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-primary/40 flex items-center justify-center">
-                                    <span className="text-white font-extrabold text-sm">{learnerName.charAt(0).toUpperCase()}</span>
-                                </div>
+                                <button
+                                    onClick={() => { clearActiveProfile(); router.push('/profiles'); }}
+                                    className="text-[#808080] hover:text-primary transition-colors ml-1"
+                                    title="Switch Profile"
+                                >
+                                    <span className="material-symbols-outlined" style={{ fontSize: 18 }}>swap_horiz</span>
+                                </button>
                             </div>
                         </div>
                     </header>
@@ -131,17 +141,17 @@ export default function AppLayout({ children, hideHeader = false }) {
                 {searchOpen && (
                     <div className="fixed inset-0 z-50 flex flex-col">
                         {/* Backdrop */}
-                        <div className="absolute inset-0 bg-[#2A2018]/70 backdrop-blur-md" onClick={() => setSearchOpen(false)} />
+                        <div className="absolute inset-0 bg-[#141414]/80 backdrop-blur-md" onClick={() => setSearchOpen(false)} />
 
                         {/* Overlay content */}
                         <div className="relative z-10 flex flex-col h-full max-w-5xl mx-auto w-full px-6 pt-8">
                             {/* Search bar */}
                             <div className="flex items-center gap-4 mb-8">
                                 <div className="flex-1 relative">
-                                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#6B5E52]" style={{ fontSize: 24 }}>search</span>
+                                    <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#B3B3B3]" style={{ fontSize: 24 }}>search</span>
                                     <input
                                         ref={searchInputRef}
-                                        className="w-full bg-white border border-[#D8CCBE] rounded-2xl py-4 pl-14 pr-6 text-lg text-[#2A2018] placeholder-[#9A8E82] focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                                        className="w-full bg-[#1E1E1E] border border-[#333333] rounded-2xl py-4 pl-14 pr-6 text-lg text-[#E5E5E5] placeholder-[#808080] focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
                                         placeholder="What do you want to learn?"
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -149,18 +159,18 @@ export default function AppLayout({ children, hideHeader = false }) {
                                 </div>
                                 <button
                                     onClick={() => setSearchOpen(false)}
-                                    className="size-12 rounded-xl bg-white border border-[#D8CCBE] flex items-center justify-center text-[#6B5E52] hover:text-[#2A2018] hover:border-[#9A8E82] transition-all flex-shrink-0"
+                                    className="size-12 rounded-xl bg-[#1E1E1E] border border-[#333333] flex items-center justify-center text-[#B3B3B3] hover:text-[#E5E5E5] hover:border-[#808080] transition-all flex-shrink-0"
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 22 }}>close</span>
                                 </button>
                             </div>
 
                             {/* Content area */}
-                            <div className="flex-1 overflow-y-auto pb-12" style={{ scrollbarWidth: 'thin', scrollbarColor: '#D8CCBE transparent' }}>
+                            <div className="flex-1 overflow-y-auto pb-12" style={{ scrollbarWidth: 'thin', scrollbarColor: '#333333 transparent' }}>
                                 {/* Searching — show filtered results as cards */}
                                 {searchQuery.trim().length > 0 ? (
                                     <div>
-                                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4">
+                                        <p className="text-[11px] font-bold uppercase tracking-widest text-[#808080] mb-4">
                                             {filteredCourses.length} result{filteredCourses.length !== 1 ? 's' : ''} for &quot;{searchQuery}&quot;
                                         </p>
                                         {filteredCourses.length > 0 ? (
@@ -169,10 +179,10 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                     <button
                                                         key={node.concept_id}
                                                         onClick={() => handleSelect(node)}
-                                                        className={`text-left bg-white border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
+                                                        className={`text-left bg-[#1E1E1E] border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
                                                             node.status === 'locked'
-                                                                ? 'border-[#D8CCBE] opacity-50 cursor-not-allowed'
-                                                                : 'border-[#D8CCBE] hover:border-primary/40 cursor-pointer'
+                                                                ? 'border-[#333333] opacity-50 cursor-not-allowed'
+                                                                : 'border-[#333333] hover:border-primary/40 cursor-pointer'
                                                         }`}
                                                     >
                                                         <div className="flex items-center justify-between mb-3">
@@ -185,9 +195,9 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                                 {node.status}
                                                             </span>
                                                         </div>
-                                                        <h4 className="text-[#2A2018] text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
+                                                        <h4 className="text-[#E5E5E5] text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
                                                         <div className="flex items-center gap-2">
-                                                            <div className="flex-1 h-1 bg-[#E2D8CC] rounded-full overflow-hidden">
+                                                            <div className="flex-1 h-1 bg-[#2E2E2E] rounded-full overflow-hidden">
                                                                 <div className="h-full rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%`, backgroundColor: STATUS_COLORS[node.status] }} />
                                                             </div>
                                                             <span className="text-[10px] font-bold" style={{ color: STATUS_COLORS[node.status] }}>{Math.round(node.mastery * 100)}%</span>
@@ -197,9 +207,9 @@ export default function AppLayout({ children, hideHeader = false }) {
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center justify-center py-16">
-                                                <span className="material-symbols-outlined text-[#9A8E82] mb-3" style={{ fontSize: 56 }}>search_off</span>
-                                                <p className="text-[#9A8E82] text-lg font-semibold">No courses found</p>
-                                                <p className="text-[#9A8E82] text-sm mt-1">Try a different search term</p>
+                                                <span className="material-symbols-outlined text-[#808080] mb-3" style={{ fontSize: 56 }}>search_off</span>
+                                                <p className="text-[#808080] text-lg font-semibold">No courses found</p>
+                                                <p className="text-[#808080] text-sm mt-1">Try a different search term</p>
                                             </div>
                                         )}
                                     </div>
@@ -208,7 +218,7 @@ export default function AppLayout({ children, hideHeader = false }) {
                                         {/* Continue Learning */}
                                         {activeCourses.length > 0 && (
                                             <div className="mb-8">
-                                                <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4 flex items-center gap-2">
+                                                <p className="text-[11px] font-bold uppercase tracking-widest text-[#808080] mb-4 flex items-center gap-2">
                                                     <span className="material-symbols-outlined text-primary" style={{ fontSize: 16 }}>play_circle</span>
                                                     Continue Learning
                                                 </p>
@@ -217,19 +227,19 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                         <button
                                                             key={node.concept_id}
                                                             onClick={() => handleSelect(node)}
-                                                            className="text-left bg-white border border-[#C17C64]/20 rounded-xl p-4 transition-all group hover:scale-[1.03] hover:border-primary/50 cursor-pointer relative overflow-hidden"
+                                                            className="text-left bg-[#1E1E1E] border border-[#E50914]/20 rounded-xl p-4 transition-all group hover:scale-[1.03] hover:border-primary/50 cursor-pointer relative overflow-hidden"
                                                         >
-                                                            <div className="absolute inset-0 bg-gradient-to-br from-[#C17C64]/5 to-transparent pointer-events-none" />
+                                                            <div className="absolute inset-0 bg-gradient-to-br from-[#E50914]/5 to-transparent pointer-events-none" />
                                                             <div className="relative">
-                                                                <div className="size-10 rounded-lg bg-[#C17C64]/10 flex items-center justify-center mb-3">
-                                                                    <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
+                                                                <div className="size-10 rounded-lg bg-[#E50914]/10 flex items-center justify-center mb-3">
+                                                                    <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 22, fontVariationSettings: "'FILL' 1" }}>play_circle</span>
                                                                 </div>
-                                                                <h4 className="text-[#2A2018] text-sm font-semibold mb-2 group-hover:text-primary transition-colors">{node.label}</h4>
+                                                                <h4 className="text-[#E5E5E5] text-sm font-semibold mb-2 group-hover:text-primary transition-colors">{node.label}</h4>
                                                                 <div className="flex items-center gap-2">
-                                                                    <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden">
-                                                                        <div className="h-full bg-[#C17C64] rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%` }} />
+                                                                    <div className="flex-1 h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-[#E50914] rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%` }} />
                                                                     </div>
-                                                                    <span className="text-[11px] font-bold text-[#C17C64]">{Math.round(node.mastery * 100)}%</span>
+                                                                    <span className="text-[11px] font-bold text-[#E50914]">{Math.round(node.mastery * 100)}%</span>
                                                                 </div>
                                                             </div>
                                                         </button>
@@ -241,8 +251,8 @@ export default function AppLayout({ children, hideHeader = false }) {
                                         {/* All Seasons */}
                                         {courseNodes.length > 0 && (
                                             <div className="mb-8">
-                                                <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4 flex items-center gap-2">
-                                                    <span className="material-symbols-outlined text-[#D4A574]" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>star</span>
+                                                <p className="text-[11px] font-bold uppercase tracking-widest text-[#808080] mb-4 flex items-center gap-2">
+                                                    <span className="material-symbols-outlined text-[#E87C03]" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>star</span>
                                                     All Seasons
                                                 </p>
                                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -250,10 +260,10 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                         <button
                                                             key={node.concept_id}
                                                             onClick={() => handleSelect(node)}
-                                                            className={`text-left bg-white border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
+                                                            className={`text-left bg-[#1E1E1E] border rounded-xl p-4 transition-all group hover:scale-[1.03] ${
                                                                 node.status === 'locked'
-                                                                    ? 'border-[#D8CCBE] opacity-40 cursor-not-allowed'
-                                                                    : 'border-[#D8CCBE] hover:border-primary/40 cursor-pointer'
+                                                                    ? 'border-[#333333] opacity-40 cursor-not-allowed'
+                                                                    : 'border-[#333333] hover:border-primary/40 cursor-pointer'
                                                             }`}
                                                         >
                                                             <div className="flex items-center justify-between mb-3">
@@ -266,9 +276,9 @@ export default function AppLayout({ children, hideHeader = false }) {
                                                                     {node.status}
                                                                 </span>
                                                             </div>
-                                                            <h4 className="text-[#2A2018] text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
+                                                            <h4 className="text-[#E5E5E5] text-sm font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2">{node.label}</h4>
                                                             <div className="flex items-center gap-2">
-                                                                <div className="flex-1 h-1 bg-[#E2D8CC] rounded-full overflow-hidden">
+                                                                <div className="flex-1 h-1 bg-[#2E2E2E] rounded-full overflow-hidden">
                                                                     <div className="h-full rounded-full" style={{ width: `${Math.round(node.mastery * 100)}%`, backgroundColor: STATUS_COLORS[node.status] }} />
                                                                 </div>
                                                                 <span className="text-[10px] font-bold" style={{ color: STATUS_COLORS[node.status] }}>{Math.round(node.mastery * 100)}%</span>
@@ -281,24 +291,23 @@ export default function AppLayout({ children, hideHeader = false }) {
 
                                         {/* Quick Links Row */}
                                         <div>
-                                            <p className="text-[11px] font-bold uppercase tracking-widest text-[#9A8E82] mb-4 flex items-center gap-2">
-                                                <span className="material-symbols-outlined text-[#9A8E82]" style={{ fontSize: 16 }}>link</span>
+                                            <p className="text-[11px] font-bold uppercase tracking-widest text-[#808080] mb-4 flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[#808080]" style={{ fontSize: 16 }}>link</span>
                                                 Quick Links
                                             </p>
                                             <div className="flex gap-3">
                                                 {[
-                                                    { icon: 'psychology', label: 'AI Mentor', path: '/mentor', color: '#C17C64' },
-                                                    { icon: 'analytics', label: 'Dashboard', path: '/dashboard', color: '#D4A574' },
-                                                    { icon: 'hub', label: 'Constellation', path: '/home', color: '#8FA395' },
-                                                    { icon: 'swap_horiz', label: 'Change Topic', path: '/onboarding', color: '#B8926A' },
+                                                    { icon: 'psychology', label: 'AI Mentor', path: '/mentor', color: '#E50914' },
+                                                    { icon: 'analytics', label: 'Dashboard', path: '/dashboard', color: '#E87C03' },
+                                                    { icon: 'group', label: 'Switch Profile', path: '/profiles', color: '#46D369' },
                                                 ].map((link) => (
                                                     <button
-                                                        key={link.path}
+                                                        key={link.label}
                                                         onClick={() => { setSearchOpen(false); router.push(link.path); }}
-                                                        className="flex items-center gap-3 bg-white border border-[#D8CCBE] rounded-xl px-5 py-3 hover:border-primary/30 transition-all group"
+                                                        className="flex items-center gap-3 bg-[#1E1E1E] border border-[#333333] rounded-xl px-5 py-3 hover:border-primary/30 transition-all group"
                                                     >
                                                         <span className="material-symbols-outlined" style={{ fontSize: 20, color: link.color }}>{link.icon}</span>
-                                                        <span className="text-sm text-[#3D3228] group-hover:text-[#2A2018] font-semibold">{link.label}</span>
+                                                        <span className="text-sm text-[#E5E5E5] group-hover:text-[#E5E5E5] font-semibold">{link.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -313,6 +322,7 @@ export default function AppLayout({ children, hideHeader = false }) {
                 <main className="flex-1">
                     {children}
                 </main>
+                <ToastContainer />
             </div>
         </div>
     );

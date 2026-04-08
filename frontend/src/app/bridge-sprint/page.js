@@ -98,13 +98,13 @@ function ContentSection({ section }) {
     if (section.type === 'definition' || section.type === 'explanation' || section.type === 'exercise' || section.type === 'example') {
         return (
             <div className="mb-5 last:mb-0">
-                <h3 className="text-base font-bold text-[#2A2018] mb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>
+                <h3 className="text-base font-bold text-[#E5E5E5] mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>
                         {section.type === 'definition' ? 'auto_stories' : section.type === 'explanation' ? 'psychology' : section.type === 'example' ? 'lightbulb' : 'edit_note'}
                     </span>
                     {section.title}
                 </h3>
-                <div className="text-[#3D3228] text-[14.5px] leading-[1.75] whitespace-pre-line">
+                <div className="text-[#E5E5E5] text-[14.5px] leading-[1.75] whitespace-pre-line">
                     {section.body}
                 </div>
             </div>
@@ -114,15 +114,15 @@ function ContentSection({ section }) {
     if (section.type === 'key_points') {
         return (
             <div className="mb-5 last:mb-0">
-                <h3 className="text-base font-bold text-[#2A2018] mb-3 flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>checklist</span>
+                <h3 className="text-base font-bold text-[#E5E5E5] mb-3 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#46D369]" style={{ fontSize: 18, fontVariationSettings: "'FILL' 1" }}>checklist</span>
                     {section.title}
                 </h3>
                 <ul className="space-y-2.5">
                     {section.points.map((point, i) => (
-                        <li key={i} className="flex items-start gap-3 text-[14.5px] text-[#3D3228] leading-relaxed">
-                            <span className="mt-1 size-5 rounded-full bg-[#C17C64]/10 flex items-center justify-center flex-shrink-0">
-                                <span className="text-[10px] font-bold text-[#C17C64]">{i + 1}</span>
+                        <li key={i} className="flex items-start gap-3 text-[14.5px] text-[#E5E5E5] leading-relaxed">
+                            <span className="mt-1 size-5 rounded-full bg-[#E50914]/10 flex items-center justify-center flex-shrink-0">
+                                <span className="text-[10px] font-bold text-[#E50914]">{i + 1}</span>
                             </span>
                             {point}
                         </li>
@@ -276,21 +276,21 @@ function BridgeSprintPage() {
     // ── Concept Picker (no concept_id) ──
     if (pickerMode) {
         return (
-            <div className="min-h-screen bg-[#F5EDE4]">
-                <header className="sticky top-0 z-20 bg-[#F5EDE4]/95 backdrop-blur-sm border-b border-[#D8CCBE]">
+            <div className="min-h-screen bg-[#141414]">
+                <header className="sticky top-0 z-20 bg-[#141414]/95 backdrop-blur-sm border-b border-[#333333]">
                     <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-3">
-                        <button onClick={() => router.push('/home')} className="text-[#9A8E82] hover:text-[#2A2018] transition-colors">
+                        <button onClick={() => router.push('/home')} className="text-[#808080] hover:text-[#E5E5E5] transition-colors">
                             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_back</span>
                         </button>
-                        <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 22 }}>route</span>
-                        <h1 className="text-lg font-bold text-[#2A2018]">Bridge Sprint</h1>
+                        <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 22 }}>route</span>
+                        <h1 className="text-lg font-bold text-[#E5E5E5]">Bridge Sprint</h1>
                     </div>
                 </header>
 
                 <div className="max-w-3xl mx-auto px-6 py-8">
                     <div className="mb-6">
-                        <h2 className="text-xl font-bold text-[#2A2018]">Choose a concept to review</h2>
-                        <p className="text-sm text-[#6B5E52] mt-1">Pick a concept for a quick but thorough study sprint covering all prerequisites.</p>
+                        <h2 className="text-xl font-bold text-[#E5E5E5]">Choose a concept to review</h2>
+                        <p className="text-sm text-[#B3B3B3] mt-1">Pick a concept for a quick but thorough study sprint covering all prerequisites.</p>
                     </div>
 
                     <div className="space-y-3">
@@ -300,32 +300,32 @@ function BridgeSprintPage() {
                                 whileHover={{ scale: 1.01, y: -2 }}
                                 whileTap={{ scale: 0.99 }}
                                 onClick={() => router.push(`/bridge-sprint?concept_id=${concept.id}`)}
-                                className="w-full text-left bg-white border border-[#D8CCBE] rounded-xl p-5 flex items-center gap-4 hover:border-[#C17C64]/40 transition-all group"
+                                className="w-full text-left bg-[#1E1E1E] border border-[#333333] rounded-xl p-5 flex items-center gap-4 hover:border-[#E50914]/40 transition-all group"
                             >
                                 <div className="size-12 rounded-xl flex items-center justify-center flex-shrink-0"
-                                    style={{ backgroundColor: concept.status === 'mastered' ? '#8FA39515' : '#C17C6415' }}>
+                                    style={{ backgroundColor: concept.status === 'mastered' ? '#46D36915' : '#E5091415' }}>
                                     <span className="material-symbols-outlined"
                                         style={{
                                             fontSize: 24,
-                                            color: concept.status === 'mastered' ? '#8FA395' : '#C17C64',
+                                            color: concept.status === 'mastered' ? '#46D369' : '#E50914',
                                             fontVariationSettings: "'FILL' 1"
                                         }}>
                                         {concept.status === 'mastered' ? 'check_circle' : 'play_circle'}
                                     </span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <h3 className="text-[#2A2018] font-semibold text-sm group-hover:text-[#C17C64] transition-colors truncate">{concept.label}</h3>
+                                    <h3 className="text-[#E5E5E5] font-semibold text-sm group-hover:text-[#E50914] transition-colors truncate">{concept.label}</h3>
                                     <div className="flex items-center gap-2 mt-1.5">
-                                        <div className="flex-1 h-1.5 bg-[#E2D8CC] rounded-full overflow-hidden max-w-[140px]">
+                                        <div className="flex-1 h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden max-w-[140px]">
                                             <div className="h-full rounded-full" style={{
                                                 width: `${concept.mastery}%`,
-                                                backgroundColor: concept.status === 'mastered' ? '#8FA395' : '#C17C64',
+                                                backgroundColor: concept.status === 'mastered' ? '#46D369' : '#E50914',
                                             }} />
                                         </div>
-                                        <span className="text-xs text-[#9A8E82]">{concept.mastery}% mastery</span>
+                                        <span className="text-xs text-[#808080]">{concept.mastery}% mastery</span>
                                     </div>
                                 </div>
-                                <span className="material-symbols-outlined text-[#D8CCBE] group-hover:text-[#C17C64] transition-colors" style={{ fontSize: 20 }}>
+                                <span className="material-symbols-outlined text-[#333333] group-hover:text-[#E50914] transition-colors" style={{ fontSize: 20 }}>
                                     arrow_forward
                                 </span>
                             </motion.button>
@@ -334,9 +334,9 @@ function BridgeSprintPage() {
 
                     {allConcepts.length === 0 && (
                         <div className="text-center py-12">
-                            <span className="material-symbols-outlined text-[#9A8E82]" style={{ fontSize: 48, opacity: 0.3 }}>route</span>
-                            <p className="text-[#9A8E82] text-sm mt-3">No concepts available yet. Complete your assessment first.</p>
-                            <button onClick={() => router.push('/onboarding')} className="mt-4 px-5 py-2.5 bg-[#C17C64] text-white rounded-xl text-sm font-bold hover:brightness-110">
+                            <span className="material-symbols-outlined text-[#808080]" style={{ fontSize: 48, opacity: 0.3 }}>route</span>
+                            <p className="text-[#808080] text-sm mt-3">No concepts available yet. Complete your assessment first.</p>
+                            <button onClick={() => router.push('/onboarding')} className="mt-4 px-5 py-2.5 bg-[#E50914] text-white rounded-xl text-sm font-bold hover:brightness-110">
                                 Start Assessment
                             </button>
                         </div>
@@ -349,11 +349,11 @@ function BridgeSprintPage() {
     // ── Loading ──
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#F5EDE4] flex items-center justify-center">
+            <div className="min-h-screen bg-[#141414] flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="size-12 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
-                    <p className="text-[#6B5E52] text-sm font-medium">Preparing your study sprint...</p>
-                    <p className="text-[#9A8E82] text-xs">Building mini-lessons for your prerequisites</p>
+                    <div className="size-12 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-[#B3B3B3] text-sm font-medium">Preparing your study sprint...</p>
+                    <p className="text-[#808080] text-xs">Building mini-lessons for your prerequisites</p>
                 </div>
             </div>
         );
@@ -366,57 +366,57 @@ function BridgeSprintPage() {
         const needsWorkCount = scores.filter(s => s.answer === 2 || s.answer === 3).length;
 
         return (
-            <div className="min-h-screen bg-[#F5EDE4] flex items-center justify-center p-4">
+            <div className="min-h-screen bg-[#141414] flex items-center justify-center p-4">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="w-full max-w-lg bg-white rounded-2xl border border-[#D8CCBE] shadow-xl overflow-hidden"
+                    className="w-full max-w-lg bg-[#1E1E1E] rounded-2xl border border-[#333333] shadow-xl overflow-hidden"
                 >
-                    <div className="px-8 py-8 text-center bg-gradient-to-b from-[#8FA395]/10 to-transparent">
-                        <div className="size-16 rounded-full bg-[#8FA395]/15 flex items-center justify-center mx-auto mb-4">
-                            <span className="material-symbols-outlined text-[#8FA395]" style={{ fontSize: 32, fontVariationSettings: "'FILL' 1" }}>
+                    <div className="px-8 py-8 text-center bg-gradient-to-b from-[#46D369]/10 to-transparent">
+                        <div className="size-16 rounded-full bg-[#46D369]/15 flex items-center justify-center mx-auto mb-4">
+                            <span className="material-symbols-outlined text-[#46D369]" style={{ fontSize: 32, fontVariationSettings: "'FILL' 1" }}>
                                 school
                             </span>
                         </div>
-                        <h2 className="text-2xl font-bold text-[#2A2018]">Sprint Complete!</h2>
-                        <p className="text-[#6B5E52] text-sm mt-2">
+                        <h2 className="text-2xl font-bold text-[#E5E5E5]">Sprint Complete!</h2>
+                        <p className="text-[#B3B3B3] text-sm mt-2">
                             You studied {uniqueConcepts.length} concept{uniqueConcepts.length > 1 ? 's' : ''} across {sprintItems.length} mini-lessons
                         </p>
                     </div>
 
-                    <div className="px-8 py-5 border-t border-[#E2D8CC]">
+                    <div className="px-8 py-5 border-t border-[#2E2E2E]">
                         <div className="grid grid-cols-3 gap-4 text-center">
                             <div>
-                                <p className="text-2xl font-bold text-[#8FA395]">{strongCount}</p>
-                                <p className="text-[9px] uppercase tracking-wider text-[#9A8E82] font-bold mt-1">Strong</p>
+                                <p className="text-2xl font-bold text-[#46D369]">{strongCount}</p>
+                                <p className="text-[9px] uppercase tracking-wider text-[#808080] font-bold mt-1">Strong</p>
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-[#C17C64]">{needsWorkCount}</p>
-                                <p className="text-[9px] uppercase tracking-wider text-[#9A8E82] font-bold mt-1">Needs Review</p>
+                                <p className="text-2xl font-bold text-[#E50914]">{needsWorkCount}</p>
+                                <p className="text-[9px] uppercase tracking-wider text-[#808080] font-bold mt-1">Needs Review</p>
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-[#6B5E52]">{elapsedMin}m</p>
-                                <p className="text-[9px] uppercase tracking-wider text-[#9A8E82] font-bold mt-1">Study Time</p>
+                                <p className="text-2xl font-bold text-[#B3B3B3]">{elapsedMin}m</p>
+                                <p className="text-[9px] uppercase tracking-wider text-[#808080] font-bold mt-1">Study Time</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="px-8 py-4 border-t border-[#E2D8CC]">
-                        <h4 className="text-[10px] uppercase tracking-wider text-[#9A8E82] font-bold mb-3">Concepts Covered</h4>
+                    <div className="px-8 py-4 border-t border-[#2E2E2E]">
+                        <h4 className="text-[10px] uppercase tracking-wider text-[#808080] font-bold mb-3">Concepts Covered</h4>
                         <div className="space-y-2">
                             {gaps.map((gap) => {
                                 const gapScores = scores.filter(s => s.concept === gap.label);
                                 const avgScore = gapScores.length > 0 ? gapScores.reduce((s, g) => s + (g.answer ?? 2), 0) / gapScores.length : 2;
                                 const isStrong = avgScore < 2;
                                 return (
-                                    <div key={gap.id} className="flex items-center justify-between p-3 rounded-lg bg-[#F5EDE4]">
+                                    <div key={gap.id} className="flex items-center justify-between p-3 rounded-lg bg-[#141414]">
                                         <div className="flex items-center gap-3">
-                                            <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1", color: isStrong ? '#8FA395' : '#C17C64' }}>
+                                            <span className="material-symbols-outlined" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1", color: isStrong ? '#46D369' : '#E50914' }}>
                                                 {isStrong ? 'check_circle' : 'pending'}
                                             </span>
-                                            <span className="text-sm text-[#2A2018] font-medium">{gap.label}</span>
+                                            <span className="text-sm text-[#E5E5E5] font-medium">{gap.label}</span>
                                         </div>
-                                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isStrong ? '#8FA395' : '#C17C64' }}>
+                                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: isStrong ? '#46D369' : '#E50914' }}>
                                             {isStrong ? 'Strong' : 'Review again'}
                                         </span>
                                     </div>
@@ -425,17 +425,17 @@ function BridgeSprintPage() {
                         </div>
                     </div>
 
-                    <div className="px-8 py-5 border-t border-[#E2D8CC] flex gap-3">
+                    <div className="px-8 py-5 border-t border-[#2E2E2E] flex gap-3">
                         <button
                             onClick={() => router.push(`/episode/${conceptId}?concept_id=${conceptId}`)}
-                            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#C17C64] text-white font-bold text-sm hover:brightness-110 transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#E50914] text-white font-bold text-sm hover:brightness-110 transition-all"
                         >
                             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>play_arrow</span>
                             Continue to Episode
                         </button>
                         <button
                             onClick={() => router.push('/home')}
-                            className="px-5 py-3 rounded-xl border border-[#D8CCBE] text-[#6B5E52] font-semibold text-sm hover:bg-[#F5EDE4] transition-all"
+                            className="px-5 py-3 rounded-xl border border-[#333333] text-[#B3B3B3] font-semibold text-sm hover:bg-[#141414] transition-all"
                         >
                             Home
                         </button>
@@ -447,29 +447,29 @@ function BridgeSprintPage() {
 
     // ── Sprint Flow ──
     return (
-        <div className="min-h-screen bg-[#F5EDE4]">
+        <div className="min-h-screen bg-[#141414]">
             {/* ── Top Bar ── */}
-            <header className="sticky top-0 z-20 bg-[#F5EDE4]/95 backdrop-blur-sm border-b border-[#D8CCBE]">
+            <header className="sticky top-0 z-20 bg-[#141414]/95 backdrop-blur-sm border-b border-[#333333]">
                 <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => router.back()} className="text-[#9A8E82] hover:text-[#2A2018] transition-colors">
+                        <button onClick={() => router.back()} className="text-[#808080] hover:text-[#E5E5E5] transition-colors">
                             <span className="material-symbols-outlined" style={{ fontSize: 20 }}>arrow_back</span>
                         </button>
                         <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 20 }}>route</span>
-                            <h1 className="text-sm font-bold text-[#2A2018]">Bridge Sprint</h1>
+                            <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 20 }}>route</span>
+                            <h1 className="text-sm font-bold text-[#E5E5E5]">Bridge Sprint</h1>
                         </div>
-                        <span className="text-xs font-bold text-[#9A8E82] bg-[#EDE5DB] px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-bold text-[#808080] bg-[#EDE5DB] px-2 py-0.5 rounded-full">
                             {currentStep + 1} / {sprintItems.length}
                         </span>
                     </div>
-                    <span className="text-xs text-[#9A8E82]">~{totalTime} min total</span>
+                    <span className="text-xs text-[#808080]">~{totalTime} min total</span>
                 </div>
 
                 {/* Progress bar */}
-                <div className="h-1 bg-[#E2D8CC]">
+                <div className="h-1 bg-[#2E2E2E]">
                     <motion.div
-                        className="h-full bg-[#C17C64] rounded-r-full"
+                        className="h-full bg-[#E50914] rounded-r-full"
                         animate={{ width: `${progress}%` }}
                         transition={{ duration: 0.4 }}
                     />
@@ -489,18 +489,18 @@ function BridgeSprintPage() {
                         >
                             {/* Concept & section indicator */}
                             <div className="flex items-center gap-3 mb-5">
-                                <div className="size-10 rounded-xl bg-[#C17C64]/10 flex items-center justify-center">
-                                    <span className="material-symbols-outlined text-[#C17C64]" style={{ fontSize: 20 }}>
+                                <div className="size-10 rounded-xl bg-[#E50914]/10 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-[#E50914]" style={{ fontSize: 20 }}>
                                         {current.section_icon || 'menu_book'}
                                     </span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-bold uppercase tracking-wider text-[#C17C64] truncate">
+                                    <p className="text-xs font-bold uppercase tracking-wider text-[#E50914] truncate">
                                         {current.concept_name}
                                     </p>
-                                    <p className="text-[11px] text-[#9A8E82] flex items-center gap-2">
+                                    <p className="text-[11px] text-[#808080] flex items-center gap-2">
                                         <span>{current.section_label || 'Study'}</span>
-                                        <span className="text-[#D8CCBE]">·</span>
+                                        <span className="text-[#333333]">·</span>
                                         <span>~{current.estimated_minutes || 3} min</span>
                                     </p>
                                 </div>
@@ -512,7 +512,7 @@ function BridgeSprintPage() {
                                             className="h-1.5 rounded-full transition-all"
                                             style={{
                                                 width: i === currentConceptIdx ? 20 : 8,
-                                                backgroundColor: i < currentConceptIdx ? '#8FA395' : i === currentConceptIdx ? '#C17C64' : '#E2D8CC',
+                                                backgroundColor: i < currentConceptIdx ? '#46D369' : i === currentConceptIdx ? '#E50914' : '#2E2E2E',
                                             }}
                                         />
                                     ))}
@@ -520,7 +520,7 @@ function BridgeSprintPage() {
                             </div>
 
                             {/* Main content card with sections */}
-                            <div className="bg-white rounded-2xl border border-[#D8CCBE] shadow-sm overflow-hidden">
+                            <div className="bg-[#1E1E1E] rounded-2xl border border-[#333333] shadow-sm overflow-hidden">
                                 <div className="px-5 sm:px-8 py-6">
                                     {/* Structured content sections */}
                                     {current.content_sections ? (
@@ -529,7 +529,7 @@ function BridgeSprintPage() {
                                         ))
                                     ) : (
                                         /* Fallback for API-returned content */
-                                        <div className="text-[#3D3228] text-[14.5px] leading-[1.75] whitespace-pre-line">
+                                        <div className="text-[#E5E5E5] text-[14.5px] leading-[1.75] whitespace-pre-line">
                                             {current.content || current.explanation || current.summary || 'Review this concept before proceeding.'}
                                         </div>
                                     )}
@@ -537,12 +537,12 @@ function BridgeSprintPage() {
 
                                 {/* Self-check question (only on practice sections) */}
                                 {current.question && current.options && (
-                                    <div className="px-5 sm:px-8 py-5 border-t border-[#E2D8CC] bg-gradient-to-b from-[#F5EDE4]/60 to-[#F5EDE4]/30">
+                                    <div className="px-5 sm:px-8 py-5 border-t border-[#2E2E2E] bg-gradient-to-b from-[#141414]/60 to-[#141414]/30">
                                         <div className="flex items-center gap-2 mb-3">
-                                            <span className="material-symbols-outlined text-[#6B5E52]" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>school</span>
-                                            <p className="text-xs font-bold uppercase tracking-wider text-[#6B5E52]">Self Assessment</p>
+                                            <span className="material-symbols-outlined text-[#B3B3B3]" style={{ fontSize: 16, fontVariationSettings: "'FILL' 1" }}>school</span>
+                                            <p className="text-xs font-bold uppercase tracking-wider text-[#B3B3B3]">Self Assessment</p>
                                         </div>
-                                        <p className="text-sm text-[#2A2018] font-medium mb-4">{current.question}</p>
+                                        <p className="text-sm text-[#E5E5E5] font-medium mb-4">{current.question}</p>
                                         <div className="space-y-2">
                                             {current.options.map((opt, oi) => {
                                                 const optLabel = typeof opt === 'string' ? opt : opt.label;
@@ -552,13 +552,13 @@ function BridgeSprintPage() {
                                                         onClick={() => setSelectedAnswer(oi)}
                                                         className={`w-full text-left px-4 py-3 rounded-xl text-sm transition-all border ${
                                                             selectedAnswer === oi
-                                                                ? 'border-[#C17C64] bg-[#C17C64]/8 text-[#2A2018] font-semibold'
-                                                                : 'border-[#E2D8CC] bg-white text-[#3D3228] hover:border-[#D8CCBE]'
+                                                                ? 'border-[#E50914] bg-[#E50914]/8 text-[#E5E5E5] font-semibold'
+                                                                : 'border-[#2E2E2E] bg-[#1E1E1E] text-[#E5E5E5] hover:border-[#333333]'
                                                         }`}
                                                     >
                                                         <span className="flex items-center gap-3">
                                                             <span className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                                                                selectedAnswer === oi ? 'border-[#C17C64] bg-[#C17C64]' : 'border-[#D8CCBE]'
+                                                                selectedAnswer === oi ? 'border-[#E50914] bg-[#E50914]' : 'border-[#333333]'
                                                             }`}>
                                                                 {selectedAnswer === oi && (
                                                                     <span className="material-symbols-outlined text-white" style={{ fontSize: 12 }}>check</span>
@@ -579,7 +579,7 @@ function BridgeSprintPage() {
                                 <button
                                     onClick={handleBack}
                                     disabled={currentStep === 0}
-                                    className="flex items-center gap-1.5 px-4 py-2.5 text-sm text-[#9A8E82] hover:text-[#2A2018] disabled:opacity-30 transition-colors"
+                                    className="flex items-center gap-1.5 px-4 py-2.5 text-sm text-[#808080] hover:text-[#E5E5E5] disabled:opacity-30 transition-colors"
                                 >
                                     <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_back</span>
                                     Back
@@ -587,7 +587,7 @@ function BridgeSprintPage() {
 
                                 <button
                                     onClick={handleNext}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#C17C64] text-white font-bold text-sm hover:brightness-110 transition-all"
+                                    className="flex items-center gap-2 px-6 py-3 rounded-xl bg-[#E50914] text-white font-bold text-sm hover:brightness-110 transition-all"
                                 >
                                     {currentStep < sprintItems.length - 1 ? (
                                         <>
@@ -609,13 +609,13 @@ function BridgeSprintPage() {
                                     const isNewConcept = i === 0 || item.concept_name !== sprintItems[i - 1]?.concept_name;
                                     return (
                                         <div key={i} className="flex items-center gap-1.5">
-                                            {isNewConcept && i > 0 && <div className="w-px h-3 bg-[#D8CCBE] mx-1" />}
+                                            {isNewConcept && i > 0 && <div className="w-px h-3 bg-[#333333] mx-1" />}
                                             <div
                                                 className="rounded-full transition-all"
                                                 style={{
                                                     width: i === currentStep ? 20 : 8,
                                                     height: 8,
-                                                    backgroundColor: i < currentStep ? '#8FA395' : i === currentStep ? '#C17C64' : '#E2D8CC',
+                                                    backgroundColor: i < currentStep ? '#46D369' : i === currentStep ? '#E50914' : '#2E2E2E',
                                                 }}
                                             />
                                         </div>
@@ -633,8 +633,8 @@ function BridgeSprintPage() {
 export default function BridgeSprintWrapper() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[#F5EDE4] flex items-center justify-center">
-                <div className="size-10 border-2 border-[#C17C64] border-t-transparent rounded-full animate-spin" />
+            <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+                <div className="size-10 border-2 border-[#E50914] border-t-transparent rounded-full animate-spin" />
             </div>
         }>
             <BridgeSprintPage />

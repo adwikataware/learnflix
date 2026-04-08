@@ -5,10 +5,10 @@ import { signalStruggle, getLearnerId } from './api';
 
 // ─── Zone thresholds (match backend ZPD scoring) ─────────────────────────────
 const ZONE_META = {
-    too_easy:            { label: 'Too Easy',           color: '#9A8E82', icon: 'speed',               level: 0 },
-    comfortable:         { label: 'Comfortable',        color: '#8FA395', icon: 'check_circle',        level: 0 },
-    productive_struggle: { label: 'Productive Struggle', color: '#D4A574', icon: 'psychology',         level: 0 },
-    struggling:          { label: 'Struggling',          color: '#C17C64', icon: 'warning',            level: 1 },
+    too_easy:            { label: 'Too Easy',           color: '#808080', icon: 'speed',               level: 0 },
+    comfortable:         { label: 'Comfortable',        color: '#46D369', icon: 'check_circle',        level: 0 },
+    productive_struggle: { label: 'Productive Struggle', color: '#E87C03', icon: 'psychology',         level: 0 },
+    struggling:          { label: 'Struggling',          color: '#E50914', icon: 'warning',            level: 1 },
     frustrated:          { label: 'Frustrated',          color: '#ef4444', icon: 'sentiment_stressed', level: 3 },
     giving_up:           { label: 'Giving Up',           color: '#dc2626', icon: 'crisis_alert',       level: 4 },
 };

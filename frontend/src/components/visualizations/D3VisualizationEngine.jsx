@@ -4,24 +4,24 @@ import * as d3 from 'd3';
 import { motion, AnimatePresence } from 'framer-motion';
 // ─── Warm Earthy Theme Colors ───────────────────────────────────────────
 const THEME = {
-  bg: '#F5EDE4',
+  bg: '#141414',
   surface: '#FFFFFF',
-  card: '#F0E7DC',
-  border: '#D8CCBE',
-  text: '#2A2018',
-  textMuted: '#9A8E82',
-  accent: '#C17C64',
-  accentAlt: '#D4A574',
-  success: '#8FA395',
-  warning: '#D4A574',
-  danger: '#C17C64',
+  card: '#2A2A2A',
+  border: '#333333',
+  text: '#E5E5E5',
+  textMuted: '#808080',
+  accent: '#E50914',
+  accentAlt: '#E87C03',
+  success: '#46D369',
+  warning: '#E87C03',
+  danger: '#E50914',
   purple: '#9B7EB5',
   pink: '#C4889B',
   cyan: '#7BA3B0',
-  orange: '#CB8A5E',
-  gradientStart: '#C17C64',
-  gradientEnd: '#D4A574',
-  palette: ['#C17C64', '#D4A574', '#8FA395', '#9B7EB5', '#C4889B', '#CB8A5E', '#7BA3B0', '#B8926A', '#A68E7B', '#6B8F7B'],
+  orange: '#E87C03',
+  gradientStart: '#E50914',
+  gradientEnd: '#E87C03',
+  palette: ['#E50914', '#E87C03', '#46D369', '#9B7EB5', '#C4889B', '#E87C03', '#7BA3B0', '#B8926A', '#A68E7B', '#6B8F7B'],
 };
 
 // ─── Icon map for visualization types ────────────────────────────────────────
@@ -820,7 +820,7 @@ function renderHeatmap(svgEl, data, dims) {
   // Theme-based color scale: light creme → sage → terracotta
   const colorScale = d3.scaleLinear()
     .domain([0, maxVal * 0.35, maxVal * 0.7, maxVal])
-    .range(['#EDE5DB', '#D4C5A9', '#D4A574', '#C17C64'])
+    .range(['#EDE5DB', '#D4C5A9', '#E87C03', '#E50914'])
     .clamp(true);
 
   rows.forEach((row, ri) => {
@@ -866,8 +866,8 @@ function renderHeatmap(svgEl, data, dims) {
   const legendDefs = svg.append('defs');
   const legendGrad = legendDefs.append('linearGradient').attr('id', 'hm-legend').attr('x1', 0).attr('y1', 0).attr('x2', 1).attr('y2', 0);
   legendGrad.append('stop').attr('offset', '0%').attr('stop-color', '#EDE5DB');
-  legendGrad.append('stop').attr('offset', '50%').attr('stop-color', '#D4A574');
-  legendGrad.append('stop').attr('offset', '100%').attr('stop-color', '#C17C64');
+  legendGrad.append('stop').attr('offset', '50%').attr('stop-color', '#E87C03');
+  legendGrad.append('stop').attr('offset', '100%').attr('stop-color', '#E50914');
 
   g.append('rect').attr('x', legendX).attr('y', legendY).attr('width', legendW).attr('height', legendH).attr('rx', 4).attr('fill', 'url(#hm-legend)');
   g.append('text').text('Low').attr('x', legendX - 4).attr('y', legendY + 7).attr('text-anchor', 'end').attr('fill', THEME.textMuted).attr('font-size', 9);

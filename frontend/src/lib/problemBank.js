@@ -1,4 +1,4 @@
-// ─── PrimeLearn Problem Bank ─────────────────────────────────────────────────────
+// ─── LearnFlix Problem Bank ─────────────────────────────────────────────────────
 // Real LeetCode/HackerRank-style problems with starters for Python, C++, C, Java.
 // Returns 5 problems per topic: 2 Easy, 2 Medium, 1 Hard.
 // ─────────────────────────────────────────────────────────────────────────────────

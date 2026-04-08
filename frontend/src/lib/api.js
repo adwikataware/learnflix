@@ -6,6 +6,71 @@ const api = axios.create({
     timeout: 120000,
 });
 
+// ═══ PROFILE MANAGEMENT (Netflix-style multi-profile) ═══
+const PROFILES_KEY = 'primelearn_profiles';
+const ACTIVE_PROFILE_KEY = 'primelearn_active_profile';
+
+export const getProfiles = () => {
+    if (typeof window === 'undefined') return [];
+    try {
+        return JSON.parse(localStorage.getItem(PROFILES_KEY) || '[]');
+    } catch { return []; }
+};
+
+export const saveProfiles = (profiles) => {
+    if (typeof window !== 'undefined') localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
+};
+
+export const addProfile = (profile) => {
+    const profiles = getProfiles();
+    profiles.push({
+        id: Date.now().toString(),
+        name: profile.name,
+        specialization: profile.specialization,
+        learner_id: profile.learner_id,
+        color: profile.color || PROFILE_COLORS[profiles.length % PROFILE_COLORS.length],
+        created_at: new Date().toISOString(),
+    });
+    saveProfiles(profiles);
+    return profiles[profiles.length - 1];
+};
+
+export const deleteProfile = (profileId) => {
+    const profiles = getProfiles().filter(p => p.id !== profileId);
+    saveProfiles(profiles);
+    const active = getActiveProfile();
+    if (active?.id === profileId) clearActiveProfile();
+};
+
+export const setActiveProfile = (profile) => {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(ACTIVE_PROFILE_KEY, JSON.stringify(profile));
+        localStorage.setItem('learner_id', profile.learner_id);
+        localStorage.setItem('learner_name', profile.name);
+    }
+};
+
+export const getActiveProfile = () => {
+    if (typeof window === 'undefined') return null;
+    try {
+        return JSON.parse(localStorage.getItem(ACTIVE_PROFILE_KEY));
+    } catch { return null; }
+};
+
+export const clearActiveProfile = () => {
+    if (typeof window !== 'undefined') {
+        localStorage.removeItem(ACTIVE_PROFILE_KEY);
+        localStorage.removeItem('learner_id');
+        localStorage.removeItem('learner_name');
+    }
+};
+
+export const PROFILE_COLORS = [
+    '#C17C64', '#8FA395', '#D4A574', '#7C9EB8', '#B87CA3',
+    '#9A8E82', '#6B8F71', '#CB8A5E', '#8B7EC8', '#C47A7A',
+];
+
+// ═══ LEGACY HELPERS (still used by existing pages) ═══
 export const getLearnerId = () => {
     if (typeof window !== 'undefined') return localStorage.getItem('learner_id');
     return null;
@@ -71,7 +136,7 @@ export const updateLeitnerBox = (data) =>
 export const getConstellation = (learner_id) =>
     handleResponse(api.get(`/constellation?learner_id=${learner_id}`));
 
-// Episodes
+// Episodes (longer timeout — Bedrock content generation can take 30-60s)
 export const getEpisode = (episode_id, learner_id, concept_id, is_revision = false, time_available = 30) => {
     const params = new URLSearchParams({
         is_revision: String(is_revision),
@@ -79,7 +144,7 @@ export const getEpisode = (episode_id, learner_id, concept_id, is_revision = fal
     });
     if (learner_id) params.set('learner_id', learner_id);
     if (concept_id) params.set('concept_id', concept_id || episode_id);
-    return handleResponse(api.get(`/episodes/${episode_id}?${params.toString()}`));
+    return handleResponse(api.get(`/episodes/${episode_id}?${params.toString()}`, { timeout: 180000 }));
 };
 
 export const postProgress = (episode_id, data) =>
